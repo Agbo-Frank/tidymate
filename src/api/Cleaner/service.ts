@@ -32,6 +32,7 @@ class Service {
     return { message: "Order accepted successfully", data: null}
   }
   requestKit(){}
+  
   async profile(user: string){
     const data = await Cleaner.findOne({ user }).populate("user", "-password")
 

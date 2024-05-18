@@ -5,7 +5,6 @@ interface IOrderCleaner {
   user: string | typeof Types.ObjectId
   accepted: boolean
   leader: boolean
-
 }
 export interface IOrder {
   user: string | typeof Types.ObjectId
@@ -24,7 +23,7 @@ export interface IOrder {
   amount: number
   currency: string
   paid: boolean
-  status: string // pending
+  status: string // pending 
   cleaners: IOrderCleaner[]
   metadata: any
   location: {
