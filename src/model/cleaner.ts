@@ -1,5 +1,10 @@
 import { Schema, Types, model } from "mongoose";
 
+export interface IDoc {
+  type: "proof_of_work" | "profile" | "gov_id" | "back_check",
+  url: string
+}
+
 export interface ICleaner {
   user: string | typeof Types.ObjectId
   code: string
@@ -9,6 +14,7 @@ export interface ICleaner {
     type: string
     coordinates: Number []
   }
+  docs: IDoc[]
 }
 
 const cleaner = new Schema<ICleaner>({
@@ -22,6 +28,13 @@ const cleaner = new Schema<ICleaner>({
     type: {type: String, default: "Point"},
     coordinates: [ Number ]
   },
+  docs: [{
+    type: {
+      type: String,
+      enum: ["proof_of_work", "profile", "gov_id", "back_check"]
+    },
+    url: String
+  }],
   verified: {
     type: Boolean,
     default: false

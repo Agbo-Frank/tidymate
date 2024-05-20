@@ -3,6 +3,7 @@ import Order from "../../model/order"
 import { compareStrings } from "../../utility/helpers"
 import { NotFoundException } from "../../utility/service-error"
 import { FilterQuery } from "mongoose"
+import { IUploaDocs, ISetLocation } from "./interface"
 
 class Service {
 
@@ -34,7 +35,7 @@ class Service {
   requestKit(){}
   
   async profile(user: string){
-    const data = await Cleaner.findOne({ user }).populate("user", "-password")
+    const data = await Cleaner.findOne({ user }).select("-docs").populate("user", "-password")
 
     return {
       message: "Cleaner's profile retrieved successfully",
@@ -55,8 +56,32 @@ class Service {
     }
   }
 
-  kyc(){
+  uploadDocs(payload: IUploaDocs, user: string){
     //docs: proof of work, photo, gov id, background check
+    
+  }
+
+  async kycStatus(user: string){
+    const cleaner = await Cleaner.findOne({ user }).select("-docs")
+    if(!cleaner) throw new NotFoundException("Cleaner not found")
+
+    return {
+      message: "Cleaner's KYC Status retrieved successfully",
+      data: cleaner.docs
+    }
+  }
+
+  async setLocation(payload: ISetLocation, user: string){
+    const cleaner = await Cleaner.findOne({ user })
+    if(!cleaner) throw new NotFoundException("Cleaner not found");
+    
+    await cleaner.updateOne({ 
+      location: {
+        coordinates: [ payload.long, payload.lat ]
+      } 
+    })
+
+    return { message: "Location set successfully", data: null}
   }
 
   private filters(payload: any){

@@ -30,6 +30,14 @@ class Controller {
       next(error)
     }
   } 
+  async setLocation(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { message, data } = await service.setLocation(req.body, req.user)
+      return responsHandler(res, message, StatusCodes.OK, data)
+    } catch (error) {
+      next(error)
+    }
+  } 
 }
 
 export default new Controller()
