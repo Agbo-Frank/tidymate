@@ -22,11 +22,19 @@ class Service {
 
     return {message: "Card saved successfully", data}
   }
+
   async list(user: string){
     const data = await Card.find({user})
     return {message: "Saved cards retrieved successfully", data}
   }
-  delete(){}
+
+  async del(_id: string, user: string){
+    const card = await Card.findOne({user, _id})
+    if(!card) throw new BadRequestException("Card not found");
+
+    await card.deleteOne()
+    return {message: "Saved removed successfully", data: null}
+  }
 }
 
 export default new Service()

@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes"
-import { responsHandler } from "../../utility/helpers"
+import { responsHandler, validateRequest } from "../../utility/helpers"
 import service from "./service"
 import { NextFunction, Response, Request } from "express"
 
@@ -32,7 +32,27 @@ class Controller {
   } 
   async setLocation(req: Request, res: Response, next: NextFunction) {
     try {
+      validateRequest(req)
       const { message, data } = await service.setLocation(req.body, req.user)
+      return responsHandler(res, message, StatusCodes.OK, data)
+    } catch (error) {
+      next(error)
+    }
+  }
+  
+  async uploadDocs(req: Request, res: Response, next: NextFunction) {
+    try {
+      validateRequest(req)
+      const { message, data } = await service.uploadDocs(req.body, req.user)
+      return responsHandler(res, message, StatusCodes.OK, data)
+    } catch (error) {
+      next(error)
+    }
+  } 
+
+  async kycStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { message, data } = await service.kycStatus(req.user)
       return responsHandler(res, message, StatusCodes.OK, data)
     } catch (error) {
       next(error)

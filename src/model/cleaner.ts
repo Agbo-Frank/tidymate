@@ -3,6 +3,7 @@ import { Schema, Types, model } from "mongoose";
 export interface IDoc {
   type: "proof_of_work" | "profile" | "gov_id" | "back_check",
   url: string
+  verified?: boolean
 }
 
 export interface ICleaner {
@@ -33,12 +34,10 @@ const cleaner = new Schema<ICleaner>({
       type: String,
       enum: ["proof_of_work", "profile", "gov_id", "back_check"]
     },
-    url: String
+    url: String,
+    verified: { type: Boolean, default: false }
   }],
-  verified: {
-    type: Boolean,
-    default: false
-  }
+  verified: { type: Boolean, default: false }
 }, {
   timestamps: {
     createdAt: "created_at",

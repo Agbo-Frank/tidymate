@@ -38,6 +38,8 @@ class Service {
     await tx.save()
   }
 
+  withdraw(){}
+
   async transactions(user: string, pagination: IPagination){
     const wallet = await Wallet.findOne({ user })
     if(!wallet) throw new NotFoundException("Wallet not found")

@@ -4,6 +4,6 @@ export interface ISetLocation {
 }
 
 export interface IUploaDocs {
-  type: string,
+  type: "proof_of_work" | "profile" | "gov_id" | "back_check",
   image: string
 }

@@ -1,9 +1,10 @@
 import Cleaner from "../../model/cleaner"
 import Order from "../../model/order"
 import { compareStrings } from "../../utility/helpers"
-import { NotFoundException } from "../../utility/service-error"
+import { BadRequestException, NotFoundException } from "../../utility/service-error"
 import { FilterQuery } from "mongoose"
 import { IUploaDocs, ISetLocation } from "./interface"
+import cloudinary from "../../service/cloudinary"
 
 class Service {
 
@@ -33,6 +34,7 @@ class Service {
     return { message: "Order accepted successfully", data: null}
   }
   requestKit(){}
+  paymentMethod(){}
   
   async profile(user: string){
     const data = await Cleaner.findOne({ user }).select("-docs").populate("user", "-password")
@@ -56,9 +58,27 @@ class Service {
     }
   }
 
-  uploadDocs(payload: IUploaDocs, user: string){
-    //docs: proof of work, photo, gov id, background check
-    
+ async uploadDocs(payload: IUploaDocs, user: string){
+    try {
+      const { image, type } = payload
+      const cleaner = await Cleaner.findOne({ user })
+      if(!cleaner) throw new NotFoundException("Cleaner not found");
+
+      const result = await cloudinary.uploader.upload(image, {folder: '/docs'})
+      if(!result) throw new BadRequestException("Couldn't upload docs, please try again")
+
+      const doc = cleaner.docs.find(d => compareStrings(d.type, type))
+      if(!doc){
+        cleaner.docs.push({ type, url: result.secure_url})
+      }
+      else doc.url = result.secure_url;
+
+      await cleaner.save()
+
+      return { message: "Upload successful", data: null }
+    }catch (error) {
+     throw new BadRequestException("Couldn't upload docs, please try again")
+    }
   }
 
   async kycStatus(user: string){

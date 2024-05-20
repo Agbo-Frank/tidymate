@@ -23,7 +23,7 @@ export interface IOrder {
   amount: number
   currency: string
   paid: boolean
-  status: string // pending 
+  status: string // pending cancelled
   cleaners: IOrderCleaner[]
   metadata: any
   location: {

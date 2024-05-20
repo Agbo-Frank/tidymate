@@ -100,9 +100,27 @@ class Service {
     return {message: "Orders retreved successfully", data}
   }
 
-  cancel(order_id: string, user: string){
+  async getOrder(id: string, user: string){
+    let data = await Order.findById(id)
+    if(!data) throw new NotFoundException("Order not found");
+    if(data.user.toString() !== user && data.cleaners.every(c => c.user !== user)) data = null;
 
+    return {message: "Order retreved successfully", data}
   }
+
+  async cancel(_id: string, user: string){
+    const order = await Order.findOne({ _id, user })
+    if(!order) throw new NotFoundException("Order not found");
+
+    await order.updateOne({ status: "cancelled"})
+
+    return {
+      message: "Order concelled successfully",
+      data: null
+    }
+  }
+  complete(){}
+  confirmDelivery(){}
 }
 
 export default new Service
