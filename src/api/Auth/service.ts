@@ -80,6 +80,8 @@ class Service {
     const password = await hashPassword(payload.password)
 
     await User.updateOne({ _id: user }, { password })
+
+    return { message: "Password reset successfully", data: null }
   }
 }
 

@@ -3,8 +3,9 @@ import Order from "../../model/order"
 import { compareStrings } from "../../utility/helpers"
 import { BadRequestException, NotFoundException } from "../../utility/service-error"
 import { FilterQuery } from "mongoose"
-import { IUploaDocs, ISetLocation } from "./interface"
+import { IUploaDocs, ISetLocation, ICreateRequest } from "./interface"
 import cloudinary from "../../service/cloudinary"
+import Request from "../../model/request"
 
 class Service {
 
@@ -33,7 +34,22 @@ class Service {
 
     return { message: "Order accepted successfully", data: null}
   }
-  requestKit(){}
+
+  async requestKit(payload: ICreateRequest, user: string){
+    await Request.create({
+      user,
+      phone_number: payload.phone_number,
+      location: {
+        house_num: payload?.house_num,
+        city: payload?.city,
+        state: payload.state,
+        postal_code:payload.postal_code
+      }
+    })
+
+    return { message: "Request recieved successfully", data: null }
+  }
+
   paymentMethod(){}
   
   async profile(user: string){

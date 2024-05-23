@@ -46,7 +46,7 @@ class Controller {
     try {
       validateRequest(req)
 
-      const { message, data } = await service.login(req.body, req.user)
+      const { message, data } = await service.resetPassword(req.body, req.user)
 
       return responsHandler(res, message, StatusCodes.OK, data)
     } catch (error) {

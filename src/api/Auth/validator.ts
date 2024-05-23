@@ -14,7 +14,7 @@ export default {
     body("first_name").notEmpty().withMessage("First name is required"),
     body("last_name").notEmpty().withMessage("Last name is required"),
     body("last_name").notEmpty().withMessage("Last name is required"),
-    body("type").notEmpty().withMessage("User type is required").isIn([]),
+    body("type").notEmpty().withMessage("User type is required").isIn(["cleaner", "homeowner"]),
     body("phone_number").notEmpty().withMessage("Phone number is required")
   ]
 }

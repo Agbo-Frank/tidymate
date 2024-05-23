@@ -58,6 +58,15 @@ class Controller {
       next(error)
     }
   } 
+
+  async requestKit(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { message, data } = await service.requestKit(req.body, req.user)
+      return responsHandler(res, message, StatusCodes.OK, data)
+    } catch (error) {
+      next(error)
+    }
+  } 
 }
 
 export default new Controller()
