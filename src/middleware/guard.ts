@@ -3,7 +3,7 @@ import { validateRequest } from "../utility/helpers";
 import { header } from "express-validator";
 import jwt from "../utility/jwt";
 
-export default function guard(req: Request, res: Response, next: NextFunction){
+export default function guard(req: any, _: Response, next: NextFunction){
   try{
     validateRequest(req);
     const token = req.header('authorization');
@@ -11,7 +11,6 @@ export default function guard(req: Request, res: Response, next: NextFunction){
     const decoded = jwt.verify(token);
     
     req.user = decoded?.id;
-    // req.role = decoded?.role;
     next();
   }
   catch(error){

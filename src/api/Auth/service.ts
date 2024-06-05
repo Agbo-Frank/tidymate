@@ -34,7 +34,7 @@ class Service {
     user = new User({ 
       email, first_name, 
       last_name, phone_number,
-      password, 
+      password,
       referral_code: randAlphaNum(8)
     })
     const wallet = new Wallet({user: user.id})
@@ -53,10 +53,10 @@ class Service {
 
     await user.save()
     await wallet.save()
-
+    console.log(user)
     await mail.sendOTP(email)
 
-    return { message: "", data: null}
+    return { message: "Registration successful", data: null}
   }
 
   async verifyOtp(payload: IVerifyOtp){

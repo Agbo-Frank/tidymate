@@ -2,11 +2,10 @@ import { Request, Response, NextFunction } from "express";
 import { responsHandler, validateRequest } from "../../utility/helpers";
 import service from "./service";
 import { StatusCodes } from "http-status-codes";
-import mail from "../../service/mail";
 
 class Controller {
 
-  async profile(req: Request, res: Response, next: NextFunction){
+  async profile(req: any, res: Response, next: NextFunction){
     try {
       validateRequest(req)
 
@@ -18,7 +17,7 @@ class Controller {
     }
   }
 
-  async update(req: Request, res: Response, next: NextFunction){
+  async update(req: any, res: Response, next: NextFunction){
     try {
       validateRequest(req)
 
@@ -30,7 +29,7 @@ class Controller {
     }
   }
 
-  async changePassword(req: Request, res: Response, next: NextFunction){
+  async changePassword(req: any, res: Response, next: NextFunction){
     try {
       validateRequest(req)
 

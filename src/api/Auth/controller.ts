@@ -42,7 +42,7 @@ class Controller {
     }
   }
 
-  async resetPassword(req: Request, res: Response, next: NextFunction){
+  async resetPassword(req: any, res: Response, next: NextFunction){
     try {
       validateRequest(req)
 

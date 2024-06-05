@@ -38,16 +38,17 @@ class MailService {
       const key = `otp:${email}`;
       const code = randNum()
 
-      await this.config.sendMail({
+      const result = await this.config.sendMail({
         from: MAIL_USER,
         to: email,
         subject: "OTP Verification",
         text: `${code}`
       })
-
+      console.log(result)
       await redis.SET(key, JSON.stringify({ code }), { EX: 10 * 60, NX: true })
       return { message: "OTP sent to yout mail " + maskEmail(email) }
     } catch (error: any) {
+      console.log(error)
       if(error instanceof ServiceError) throw error
       return { message: `Failed to send OTP, verify this email ${maskEmail(email)} is correct`}
     }

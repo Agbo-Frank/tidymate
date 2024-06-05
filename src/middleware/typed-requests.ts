@@ -2,9 +2,7 @@ import { Request as ExpressRequest } from 'express-serve-static-core';
 
 declare global {
   namespace Express {
-    interface Request {
-      user: string
-    }
+    interface Request { user: string }
   }
 }
 

@@ -57,7 +57,7 @@ export const isEmpty = (mixedVar: any) => {
 
 export const maskEmail = (email: string) => {
   const [username, domain] = email.split('@');
-  const mask = username + '*'.repeat(username.length - 2) + username.charAt(username.length - 1);
+  const mask = username.slice(0, 4) + '*'.repeat(Math.floor(username.length / 2)) + username.charAt(username.length - 1);
   return mask + '@' +  domain
 }
 
