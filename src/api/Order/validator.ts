@@ -11,7 +11,7 @@ export default {
   ],
   addCleaner: [
     body("order").notEmpty().withMessage("Order id is required").isMongoId().withMessage("Invalid order id"),
-    body("cleaners").isArray().whitelist("invalid value"),
+    body("cleaners").isArray().withMessage("invalid value"),
     body("cleaners.*").isMongoId().withMessage("Invalid cleaner id")
   ],
   processPayment: [

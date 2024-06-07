@@ -21,7 +21,7 @@ export interface ICleaner {
 const cleaner = new Schema<ICleaner>({
   user: {
     type: Types.ObjectId,
-    ref: "user"
+    ref: "User"
   },
   code: String,
   earnings: Number,

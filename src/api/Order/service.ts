@@ -28,7 +28,7 @@ class Service {
   async reorder(payload: IReOrder, user: string){
     const order = await Order.findById(payload.order).lean()
     if(!order) throw new NotFoundException("Order not found ");
-    
+
     const newOrder = new Order({
       user, service: order.service,
       config: order.config,
@@ -52,9 +52,19 @@ class Service {
     if(!order){
       throw new NotFoundException("Order not found")
     } 
+
+    if(!compareStrings(order.status, "pending")){
+      throw new NotFoundException(`This order has been ${order.status}`)
+    }
+
+    //TODO: Select a leader
     const cleaners = await User.find({_id: payload.cleaners, cleaner: { $exists: true }});
     if(cleaners.length > 0){
-      await order.updateOne({ $addToSet: { cleaners: { $each: cleaners.map(u => ({user: u.id})) } } })
+      const order_cleaners = cleaners
+        .filter(c => !order.cleaners.some(_c => _c.user == c.id)) 
+        .map(u => ({user: u.id}))
+
+      await order.updateOne({ $addToSet: { cleaners: { $each: order_cleaners } } })
     }
 
     return { message: "Cleaners added successfully", data: order}

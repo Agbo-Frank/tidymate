@@ -67,7 +67,10 @@ const order = new Schema<IOrder>({
   amount: { type: Number },
   currency: String,
   paid: {type: Boolean, default: false},
-  status: String, // pending
+  status: {
+    type: String,
+    default: "pending"
+  }, // pending
   cleaners: [ orderCleaner ],
   location: {
     address: String,

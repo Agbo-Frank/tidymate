@@ -4,7 +4,7 @@ import service from "./service"
 import { NextFunction, Response, Request } from "express"
 
 class Controller {
-  async orders(req: Request, res: Response, next: NextFunction) {
+  async orders(req: any, res: Response, next: NextFunction) {
     try {
       const { message, data } = await service.orders(req.user)
       return responsHandler(res, message, StatusCodes.OK, data)
@@ -13,7 +13,7 @@ class Controller {
     }
   } 
 
-  async profile(req: Request, res: Response, next: NextFunction) {
+  async profile(req: any, res: Response, next: NextFunction) {
     try {
       const { message, data } = await service.profile(req.user)
       return responsHandler(res, message, StatusCodes.OK, data)
@@ -22,15 +22,16 @@ class Controller {
     }
   } 
 
-  async getCleaners(req: Request, res: Response, next: NextFunction) {
+  async getCleaners(req: any, res: Response, next: NextFunction) {
     try {
       const { message, data } = await service.getCleaners(req.query)
       return responsHandler(res, message, StatusCodes.OK, data)
     } catch (error) {
+      console.log(error)
       next(error)
     }
   } 
-  async setLocation(req: Request, res: Response, next: NextFunction) {
+  async setLocation(req: any, res: Response, next: NextFunction) {
     try {
       validateRequest(req)
       const { message, data } = await service.setLocation(req.body, req.user)
@@ -40,7 +41,7 @@ class Controller {
     }
   }
   
-  async uploadDocs(req: Request, res: Response, next: NextFunction) {
+  async uploadDocs(req: any, res: Response, next: NextFunction) {
     try {
       validateRequest(req)
       const { message, data } = await service.uploadDocs(req.body, req.user)
@@ -50,7 +51,7 @@ class Controller {
     }
   } 
 
-  async kycStatus(req: Request, res: Response, next: NextFunction) {
+  async kycStatus(req: any, res: Response, next: NextFunction) {
     try {
       const { message, data } = await service.kycStatus(req.user)
       return responsHandler(res, message, StatusCodes.OK, data)
@@ -59,7 +60,7 @@ class Controller {
     }
   } 
 
-  async requestKit(req: Request, res: Response, next: NextFunction) {
+  async requestKit(req: any, res: Response, next: NextFunction) {
     try {
       const { message, data } = await service.requestKit(req.body, req.user)
       return responsHandler(res, message, StatusCodes.OK, data)
