@@ -1,11 +1,11 @@
-import { NextFunction, Response, Request } from "express"
+import { NextFunction, Response } from "express"
 import { responsHandler, validateRequest } from "../../utility/helpers"
 import service from "./service"
 import { StatusCodes } from "http-status-codes"
 
 class Controller {
 
-  async create(req: Request, res: Response, next: NextFunction) {
+  async create(req: any, res: Response, next: NextFunction) {
     try {
       validateRequest(req)
       const { message, data } = await service.create(req.body, req.user)
@@ -14,7 +14,7 @@ class Controller {
       next(error)
     }
   } 
-  async list(req: Request, res: Response, next: NextFunction) {
+  async list(req: any, res: Response, next: NextFunction) {
     try {
       const { message, data } = await service.list(req.user)
       return responsHandler(res, message, StatusCodes.OK, data)
@@ -23,7 +23,7 @@ class Controller {
     }
   } 
 
-  async del(req: Request, res: Response, next: NextFunction) {
+  async del(req: any, res: Response, next: NextFunction) {
     try {
       const { message, data } = await service.del(req.params.id, req.user)
       return responsHandler(res, message, StatusCodes.OK, data)

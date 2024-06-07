@@ -20,5 +20,4 @@ export default function guard(req: any, _: Response, next: NextFunction){
 
 export const guardValid= header("authorization")
   .notEmpty().withMessage("Token is required")
-  .custom(value => value?.startsWith('Bearer')).withMessage("Invalid token, it must start with Bearer") 
   .customSanitizer(value => value?.replace('Bearer ', ''))

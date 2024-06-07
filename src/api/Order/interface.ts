@@ -10,7 +10,7 @@ export interface ICreateOrder {
 }
 
 export interface IProcessPayment {
-  order_id: string
+  order: string
   method: "wallet" | "card" | "paypal"
   card: string
 }

@@ -28,10 +28,14 @@ class Service {
   async reorder(payload: IReOrder, user: string){
     const order = await Order.findById(payload.order).lean()
     if(!order) throw new NotFoundException("Order not found ");
-
+    
     const newOrder = new Order({
-      ...order,
+      user, service: order.service,
+      config: order.config,
+      images: order.images,
       paid: false,
+      status: "pending",
+      location: order.location,
       start_date: dayjs.unix(payload.start_date).toISOString()
     })
 
@@ -48,17 +52,16 @@ class Service {
     if(!order){
       throw new NotFoundException("Order not found")
     } 
-
-    const users = (await Promise.all(payload.cleaners.map(c => User.findById(c)))).filter(c => !isEmpty(c))
-    const order_cleaners = users.map(u => ({user: u.id}))
-
-    await order.updateOne({ $addToSet: { cleaners: { $each: order_cleaners } } })
+    const cleaners = await User.find({_id: payload.cleaners, cleaner: { $exists: true }});
+    if(cleaners.length > 0){
+      await order.updateOne({ $addToSet: { cleaners: { $each: cleaners.map(u => ({user: u.id})) } } })
+    }
 
     return { message: "Cleaners added successfully", data: order}
   }
 
   async processPayment(payload: IProcessPayment, user: string){
-    const order = await Order.findById(payload.order_id)
+    const order = await Order.findById(payload.order)
     if(!order) throw new NotFoundException("Order not found");
 
     if(compareStrings(payload.method, "wallet")){
@@ -88,11 +91,13 @@ class Service {
         payment_method: card.reference,
         metadata: { order: order.id }
       })
-      order.metadata = {payment: result.id}
+      order.metadata = { payment: result.id }
       //TODO: handle the webhook
     }
 
     await order.save()
+
+    return { message: "", data: null }
   }
 
   async getOrders(user: string){

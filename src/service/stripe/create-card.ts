@@ -7,6 +7,7 @@ export async function createCard(payload: ICreateCard): Promise<ICreateCardResul
     const result = await client.post("/payment_methods", { card: payload, type: "card"})
     return result?.data
   } catch (error) {
+    console.log(JSON.stringify(error, null, 2))
     throw new ProviderError("stripe", error)
   }
 }

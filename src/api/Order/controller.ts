@@ -5,10 +5,10 @@ import { StatusCodes } from "http-status-codes";
 
 class Controller {
   
-  async create(req: Request, res: Response, next: NextFunction){
+  async create(req: any, res: Response, next: NextFunction){
     try {
       validateRequest(req)
-      
+    
       const { message, data } = await service.create(req.body, req.user)
 
       return responsHandler(res, message, StatusCodes.CREATED, data)
@@ -17,7 +17,7 @@ class Controller {
     }
   }
 
-  async reorder(req: Request, res: Response, next: NextFunction){
+  async reorder(req: any, res: Response, next: NextFunction){
     try {
       validateRequest(req)
       
@@ -29,7 +29,7 @@ class Controller {
     }
   }
 
-  async addCleaners(req: Request, res: Response, next: NextFunction){
+  async addCleaners(req: any, res: Response, next: NextFunction){
     try {
       validateRequest(req)
       
@@ -41,9 +41,41 @@ class Controller {
     }
   }
 
-  async getOrders(req: Request, res: Response, next: NextFunction){
+  async getOrders(req: any, res: Response, next: NextFunction){
     try {
       const { message, data } = await service.getOrders(req.user)
+
+      return responsHandler(res, message, StatusCodes.OK, data)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async getOrder(req: any, res: Response, next: NextFunction){
+    try {
+      const { message, data } = await service.getOrder(req.params.id, req.user)
+
+      return responsHandler(res, message, StatusCodes.OK, data)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async cancel(req: any, res: Response, next: NextFunction){
+    try {
+      const { message, data } = await service.cancel(req.params.id, req.user)
+
+      return responsHandler(res, message, StatusCodes.OK, data)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async processPayment(req: any, res: Response, next: NextFunction){
+    try {
+      validateRequest(req)
+      
+      const { message, data } = await service.processPayment(req.body, req.user)
 
       return responsHandler(res, message, StatusCodes.OK, data)
     } catch (error) {
