@@ -36,6 +36,11 @@ class Service {
     }
 
     await tx.save()
+
+    return {
+      message: "Deposit initiated successfully",
+      data: tx
+    }
   }
 
   withdraw(){}
@@ -43,6 +48,7 @@ class Service {
   async transactions(user: string, pagination: IPagination){
     const wallet = await Wallet.findOne({ user })
     if(!wallet) throw new NotFoundException("Wallet not found")
+
     const data = await Transaction.paginate(
       { wallet: wallet.id }, 
       {...pagination, sort: { updated_at: "desc" }}

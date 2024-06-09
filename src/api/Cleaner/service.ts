@@ -36,18 +36,19 @@ class Service {
   }
 
   async requestKit(payload: ICreateRequest, user: string){
-    await Request.create({
+    const data = await Request.create({
       user,
       phone_number: payload.phone_number,
       location: {
         house_num: payload?.house_num,
+        address: payload?.address,
         city: payload?.city,
         state: payload.state,
         postal_code:payload.postal_code
       }
     })
 
-    return { message: "Request recieved successfully", data: null }
+    return { message: "Request recieved successfully", data }
   }
 
   paymentMethod(){}
@@ -91,14 +92,14 @@ class Service {
 
       await cleaner.save()
 
-      return { message: "Upload successful", data: null }
+      return { message: "Upload successful", data: cleaner.docs }
     }catch (error) {
      throw new BadRequestException("Couldn't upload docs, please try again")
     }
   }
 
   async kycStatus(user: string){
-    const cleaner = await Cleaner.findOne({ user }).select("-docs")
+    const cleaner = await Cleaner.findOne({ user })
     if(!cleaner) throw new NotFoundException("Cleaner not found")
 
     return {
@@ -121,22 +122,21 @@ class Service {
   }
 
   private filters(payload: any){
-    const allowed_filters = ["lat", "long"]
+    const allowed_filters = ["lat"]
     const queries: FilterQuery<any>[] = []
     const _filters = Object.entries(payload)
 
     for (let i = 0; i < _filters.length; i++) {
       if(!allowed_filters.includes(_filters[i][0])) continue;
-      if(
-        compareStrings(_filters[i][0], "lat") ||
-        compareStrings(_filters[i][0], "long")
-      ){
+      if(compareStrings(_filters[i][0], "lat")){
         queries.push({
           location: { $near: {
             $geometry: { 
               type: 'Point',
               coordinates: [payload?.long, payload?.lat]
             },
+            spherical: true,
+            distanceField: 'distance',
             $maxDistance: 5000  // Distance in meters
           }}
         })

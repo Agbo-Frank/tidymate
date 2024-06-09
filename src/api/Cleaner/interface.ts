@@ -11,6 +11,7 @@ export interface IUploaDocs {
 export interface ICreateRequest {
   phone_number: string
   house_num?: string
+  address: string
   city: string
   state: string
   postal_code: string

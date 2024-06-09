@@ -6,6 +6,10 @@ export default {
     body("long").notEmpty().withMessage("Longitude must be specified").isNumeric().withMessage("Longitude must be numeric"),
     body("lat").notEmpty().withMessage("Latitude must be specified").isNumeric().withMessage("Latitude must be numeric"),
   ],
+  uploadDocs: [
+    body("type").notEmpty().withMessage("Docs type is required").isIn(["proof_of_work", "profile", "gov_id", "back_check"]),
+    body("image").notEmpty().withMessage("Image is required")
+  ],
   requestKit: [
     body("address").notEmpty().withMessage("Address is required"),
     body("postal_code").notEmpty().withMessage("Postal code is required"),
