@@ -19,7 +19,8 @@ class Service {
     const order = await Order.findById(id)
     if(!order) throw new NotFoundException("Order not found");
     
-    await order.updateOne({$pull: { user }})
+    //TODO: handle when the cleaner to be removed is a leader
+    await order.updateOne({$pull: { cleaners:  { user } }})
 
     return { message: "Order declined successfully", data: null}
   }
@@ -28,7 +29,9 @@ class Service {
     const order = await Order.findById(id)
     if(!order) throw new NotFoundException("Order not found");
 
-    const cleaner_order = order.cleaners.find(c => c.user === user)
+    const cleaner_order = order.cleaners.find(c => c.user == user)
+    if(!cleaner_order) throw new NotFoundException("Order not found or has been declined");
+
     cleaner_order.accepted = true
     await order.save()
 

@@ -68,6 +68,23 @@ class Controller {
       next(error)
     }
   } 
+  async accept(req: any, res: Response, next: NextFunction) {
+    try {
+      const { message, data } = await service.accept(req.params.id, req.user)
+      return responsHandler(res, message, StatusCodes.OK, data)
+    } catch (error) {
+      next(error)
+    }
+  } 
+  async cancel(req: any, res: Response, next: NextFunction) {
+    try {
+      const { message, data } = await service.cancel(req.params.id, req.user)
+      return responsHandler(res, message, StatusCodes.OK, data)
+    } catch (error) {
+      console.log(error)
+      next(error)
+    }
+  } 
 }
 
 export default new Controller()
