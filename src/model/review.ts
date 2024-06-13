@@ -5,7 +5,7 @@ export interface IReview {
   cleaner: string | typeof Types.ObjectId
   order: string | typeof Types.ObjectId
   rate: number
-  review: string
+  comment: string
 }
 
 const review = new Schema<IReview>({
@@ -25,7 +25,7 @@ const review = new Schema<IReview>({
     type: Number,
     default: 0
   },
-  review: String
+  comment: String
 }, {
   timestamps: {
     createdAt: "created_at",

@@ -22,10 +22,6 @@ const transaction = new Schema<ITransaction>({
   timestamps: {
     createdAt: "created_at",
     updatedAt: "updated_at"
-  },
-  timeseries: {
-    timeField: "created_at",
-    metaField: "metadata"
   }
 })
 

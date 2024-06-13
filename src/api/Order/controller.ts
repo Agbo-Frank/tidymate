@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import { responsHandler, validateRequest } from "../../utility/helpers";
 import service from "./service";
 import { StatusCodes } from "http-status-codes";
@@ -47,6 +47,18 @@ class Controller {
       validateRequest(req)
       
       const { message, data } = await service.review(req.body, req.user)
+
+      return responsHandler(res, message, StatusCodes.CREATED, data)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async tip(req: any, res: Response, next: NextFunction){
+    try {
+      validateRequest(req)
+      
+      const { message, data } = await service.tip(req.body, req.user)
 
       return responsHandler(res, message, StatusCodes.CREATED, data)
     } catch (error) {

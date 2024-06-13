@@ -85,6 +85,26 @@ class Controller {
       next(error)
     }
   } 
+
+  async start(req: any, res: Response, next: NextFunction) {
+    try {
+      const { message, data } = await service.start(req.params.id, req.user)
+      return responsHandler(res, message, StatusCodes.OK, data)
+    } catch (error) {
+      console.log(error)
+      next(error)
+    }
+  } 
+
+  async end(req: any, res: Response, next: NextFunction) {
+    try {
+      const { message, data } = await service.end(req.params.id, req.user)
+      return responsHandler(res, message, StatusCodes.OK, data)
+    } catch (error) {
+      console.log(error)
+      next(error)
+    }
+  } 
 }
 
 export default new Controller()

@@ -1,11 +1,12 @@
 import Cleaner from "../../model/cleaner"
 import Order from "../../model/order"
-import { compareStrings } from "../../utility/helpers"
-import { BadRequestException, NotFoundException } from "../../utility/service-error"
+import { compareStrings, isEmpty } from "../../utility/helpers"
+import { BadRequestException, NotFoundException, UnauthorizedException } from "../../utility/service-error"
 import { FilterQuery } from "mongoose"
 import { IUploaDocs, ISetLocation, ICreateRequest } from "./interface"
 import cloudinary from "../../service/cloudinary"
 import Request from "../../model/request"
+import dayjs from "dayjs"
 
 class Service {
 
@@ -23,6 +24,49 @@ class Service {
     await order.updateOne({$pull: { cleaners:  { user } }})
 
     return { message: "Order declined successfully", data: null}
+  }
+
+  async start(id: string, user: string){
+    const order = await Order.findById(id)
+    if(!order) throw new NotFoundException("Order not found");
+    if(!compareStrings(order.status, "pending")){
+      throw new NotFoundException(`Order is ${order.status}`);
+    }
+
+    const cleaner = order.cleaners.find(c => c.user == user)
+    if(!cleaner || !cleaner.leader){
+      throw new UnauthorizedException("Only Assigned team lead can start or commerce cleaning")
+    }
+
+    order.started_at = dayjs().toISOString()
+    order.status = "ongoing"
+    await order.save()
+
+    return { message: "Order commerced successfully", data: null}
+  }
+
+  async end(id: string, user: string){
+    const order = await Order.findById(id)
+    if(!order) throw new NotFoundException("Order not found");
+
+    const cleaner = order.cleaners.find(c => c.user == user)
+    if(!cleaner || !cleaner.leader){
+      throw new UnauthorizedException("Only Assigned team lead can start or commerce cleaning")
+    }
+    if(isEmpty(order.started_at)){
+      throw new UnauthorizedException("Order hasn't started")
+    }
+    const actual_duration = dayjs().diff(dayjs(order.started_at), "hours")
+    if(actual_duration < order.estimated_duration){
+      throw new UnauthorizedException("You can't end this order till it's exceeds the estimated duration")
+    }
+
+    order.ended_at = dayjs().toISOString()
+    order.actual_duration = actual_duration
+    order.status = "completed"
+    await order.save()
+
+    return { message: "Order ended successfully", data: null}
   }
 
   async accept(id: string, user: string){

@@ -21,12 +21,16 @@ export interface IOrder {
   }
   num_cleaners: number
   images: string[]
-  start_date: string
+  scheduled_at: string
+  started_at: string
+  ended_at: string
+  estimated_duration: number
+  actual_duration: number
   amount: number
   tip: number
   currency: string
   paid: boolean
-  status: string // pending cancelled
+  status: string // pending cancelled ongoing completed
   cleaners: IOrderCleaner[]
   metadata: any
   location: {
@@ -65,8 +69,12 @@ const order = new Schema<IOrder>({
     balcony: {type: Number, default: 0}
   },
   num_cleaners: Number,
+  estimated_duration: Number,
+  actual_duration: Number,
   images: [ String ],
-  start_date: String,
+  scheduled_at: Date,
+  started_at: Date,
+  ended_at: Date,
   amount: { type: Number },
   tip: { type: Number, default: 0 },
   currency: String,

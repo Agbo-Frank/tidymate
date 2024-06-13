@@ -18,7 +18,7 @@ class Service {
       service, note, 
       user,
       location, config,
-      start_date: dayjs.unix(start_date).toISOString()
+      scheduled_at: dayjs.unix(start_date).toISOString()
     })
 
     await order.save()
@@ -58,16 +58,15 @@ class Service {
       throw new NotFoundException(`This order has been ${order.status}`)
     }
 
-    const cleaners = await Cleaner.find({user: payload.cleaners})
+    const ids = payload.cleaners.concat(order.cleaners.map(c => c.user.toString()))
+    const cleaners = await Cleaner.find({ user: ids })
+    let data = []
     if(cleaners.length > 0){
-      const order_cleaners = this.selectLeader(
-        cleaners.filter(c => order.cleaners.some(_c => _c.user === c.user))
-      )
-      console.log(order_cleaners)
-      await order.updateOne({ $addToSet: { cleaners: { $each: order_cleaners } } })
+      data = this.selectLeader(cleaners)
+      await order.updateOne({ cleaners: data } )
     }
 
-    return { message: "Cleaners added successfully", data: order }
+    return { message: "Cleaners added successfully", data }
   }
 
   async processPayment(payload: IProcessPayment, user: string){
@@ -145,8 +144,8 @@ class Service {
       await Cleaner.updateOne(
         { user: review.cleaner },
         {$inc: {
-          "rating.num_of_rating": review.rate,
-          "rating.value_of_rating": 1
+          "rating.num_of_rating": 1,
+          "rating.value_of_rating": review.rate
         }}
       )
       reviews.push({...review, user})
@@ -171,6 +170,7 @@ class Service {
     await order.save()
 
     //TODO: disburbes the tip amoungst the cleaners
+    return { message: "Tip recieved successfully", data: null }
   }
 
   complete(){}
@@ -179,7 +179,7 @@ class Service {
   private selectLeader(users: ICleaner[]){
     let highest = -Infinity;
     let leader = null;
-    console.log(users)
+    
     users.forEach(user => {
       if (user.avg_rating > highest) {
         highest = user.avg_rating;
