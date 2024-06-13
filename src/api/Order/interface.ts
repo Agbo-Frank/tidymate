@@ -24,3 +24,15 @@ export interface IReOrder {
   order: string,
   start_date: number
 }
+
+export interface IReview {
+  order: string,
+  rate: number
+  review: string
+  cleaner: string
+}
+
+export interface ITip {
+  order: string,
+  amount: number
+}

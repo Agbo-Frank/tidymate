@@ -16,11 +16,17 @@ export default {
   ],
   processPayment: [
     body("order").notEmpty().withMessage("Order id is required").isMongoId().withMessage("Invalid order id"),
-    body("method").notEmpty().withMessage("Payment method is required").isIn(["wallet", "card", "paypal"]).withMessage("Invalid payment method"),
-    
+    body("method").notEmpty().withMessage("Payment method is required").isIn(["wallet", "card", "paypal"]).withMessage("Invalid payment method"), 
   ],
   reorder: [
     body("order").notEmpty().withMessage("Order id is required").isMongoId().withMessage("Invalid order id"),
     body("start_date").notEmpty().withMessage("Start date is required").isNumeric().withMessage("start date must be a number in unix format"),
+  ],
+  review: [
+    body().isArray().withMessage("Invalid payload").notEmpty().withMessage("Please submit your review"),
+    body("*.order").notEmpty().withMessage("Order id is required").isMongoId().withMessage("Invalid order id"),
+    body("*.cleaner").notEmpty().withMessage("cleaner id is required").isMongoId().withMessage("Invalid cleaner id"),
+    body("*.rate").notEmpty().withMessage("Rate is required").isInt({min: 0, max: 5}),
+    body("*.review").optional()
   ]
 }

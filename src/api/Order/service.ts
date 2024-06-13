@@ -1,14 +1,15 @@
 import dayjs from "dayjs";
 import Order from "../../model/order";
-import { IAddCleaner, ICreateOrder, IProcessPayment, IReOrder } from "./interface";
+import { IAddCleaner, ICreateOrder, IProcessPayment, IReOrder, IReview, ITip } from "./interface";
 import { BadRequestException, NotFoundException } from "../../utility/service-error";
-import { compareStrings, isEmpty } from "../../utility/helpers";
+import { compareStrings } from "../../utility/helpers";
 import Wallet from "../../model/wallet";
 import Card from "../../model/cards";
 import numeral from "numeral"
 import { chargeCard } from "../../service/stripe/charge-card";
-import User from "../../model/user";
 import Transaction from "../../model/transaction";
+import Cleaner, { ICleaner } from "../../model/cleaner";
+import Review from "../../model/review";
 
 class Service {
   async create(payload: ICreateOrder, user: string){
@@ -57,17 +58,16 @@ class Service {
       throw new NotFoundException(`This order has been ${order.status}`)
     }
 
-    //TODO: Select a leader
-    const cleaners = await User.find({_id: payload.cleaners, cleaner: { $exists: true }});
+    const cleaners = await Cleaner.find({user: payload.cleaners})
     if(cleaners.length > 0){
-      const order_cleaners = cleaners
-        .filter(c => !order.cleaners.some(_c => _c.user == c.id)) 
-        .map(u => ({user: u.id}))
-
+      const order_cleaners = this.selectLeader(
+        cleaners.filter(c => order.cleaners.some(_c => _c.user === c.user))
+      )
+      console.log(order_cleaners)
       await order.updateOne({ $addToSet: { cleaners: { $each: order_cleaners } } })
     }
 
-    return { message: "Cleaners added successfully", data: order}
+    return { message: "Cleaners added successfully", data: order }
   }
 
   async processPayment(payload: IProcessPayment, user: string){
@@ -134,8 +134,65 @@ class Service {
       data: null
     }
   }
+
+  async review(payload: IReview[], user: string){
+    if(payload.length === 0){
+      throw new BadRequestException("Review can't be empty")
+    }
+    const reviews = []
+    for (let i = 0; i < payload.length; i++) {
+      const review = payload[i]
+      await Cleaner.updateOne(
+        { user: review.cleaner },
+        {$inc: {
+          "rating.num_of_rating": review.rate,
+          "rating.value_of_rating": 1
+        }}
+      )
+      reviews.push({...review, user})
+    }
+    const data = await Review.insertMany(reviews)
+
+    return { message: "Thanks for your review", data }
+  }
+
+  async tip(payload: ITip, user: string){
+    const order = await Order.findById(payload.order)
+    if(!order) throw new NotFoundException("Order not found");
+
+    const wallet = await Wallet.findOne({ user })
+    if(!wallet) throw new NotFoundException("Wallet not found");
+    if(wallet.balance < payload.amount) throw new BadRequestException("Insufficient balance to cover tip");
+
+    wallet.balance = numeral(wallet.balance).subtract(payload.amount).value()
+    order.tip = payload.amount
+
+    await wallet.save()
+    await order.save()
+
+    //TODO: disburbes the tip amoungst the cleaners
+  }
+
   complete(){}
   confirmDelivery(){}
+
+  private selectLeader(users: ICleaner[]){
+    let highest = -Infinity;
+    let leader = null;
+    console.log(users)
+    users.forEach(user => {
+      if (user.avg_rating > highest) {
+        highest = user.avg_rating;
+        leader = user.user;
+      }
+    });
+
+    return users.map(user => ({
+      user: user.user,
+      leader: user.user == leader
+    }));
+  }
+  
 }
 
 export default new Service

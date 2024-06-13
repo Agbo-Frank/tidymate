@@ -6,6 +6,8 @@ interface IOrderCleaner {
   accepted: boolean
   leader: boolean
 }
+
+//TODO: Add duration, completed at and started at timestamp to be able to obtain the extra
 export interface IOrder {
   user: string | typeof Types.ObjectId
   service: string
@@ -21,6 +23,7 @@ export interface IOrder {
   images: string[]
   start_date: string
   amount: number
+  tip: number
   currency: string
   paid: boolean
   status: string // pending cancelled
@@ -65,6 +68,7 @@ const order = new Schema<IOrder>({
   images: [ String ],
   start_date: String,
   amount: { type: Number },
+  tip: { type: Number, default: 0 },
   currency: String,
   paid: {type: Boolean, default: false},
   status: {

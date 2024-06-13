@@ -37,6 +37,19 @@ class Controller {
 
       return responsHandler(res, message, StatusCodes.CREATED, data)
     } catch (error) {
+      console.log(error)
+      next(error)
+    }
+  }
+
+  async review(req: any, res: Response, next: NextFunction){
+    try {
+      validateRequest(req)
+      
+      const { message, data } = await service.review(req.body, req.user)
+
+      return responsHandler(res, message, StatusCodes.CREATED, data)
+    } catch (error) {
       next(error)
     }
   }
