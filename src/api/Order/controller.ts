@@ -100,9 +100,7 @@ class Controller {
     try {
       validateRequest(req)
       
-      const { message, data } = await service.processPayment(req.body, req.user)
-
-      return responsHandler(res, message, StatusCodes.OK, data)
+      return service.processPayment(res, req.body, req.user)
     } catch (error) {
       next(error)
     }

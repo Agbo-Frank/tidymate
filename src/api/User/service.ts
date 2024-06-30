@@ -2,8 +2,8 @@ import dayjs from "dayjs";
 import Referral from "../../model/referral";
 import Subscription from "../../model/subscription";
 import User, { IUser } from "../../model/user"
-import { compareStrings, hashPassword } from "../../utility/helpers";
-import { BadRequestException, NotFoundException } from "../../utility/service-error"
+import { compareStrings, hashPassword, responsHandler } from "../../utility/helpers";
+import { BadRequestException, NotFoundException, ServiceError } from "../../utility/service-error"
 import { IChangePassword } from "./interface";
 import bcrypt from "bcrypt"
 import Card from "../../model/cards";
@@ -11,6 +11,9 @@ import { chargeCard } from "../../service/stripe/charge-card";
 import Wallet from "../../model/wallet";
 import numeral from "numeral";
 import Transaction from "../../model/transaction";
+import { createPayment } from "../../service/paypal";
+import { Response } from "express";
+import { StatusCodes } from "http-status-codes";
 
 class Service {
   async profile(id: string){
@@ -63,7 +66,7 @@ class Service {
     return { message: "Referral stats retrieved successfully", data}
   }
 
-  async subscribe(payload: any, id: string){
+  async subscribe(res: Response, payload: any, id: string){
     const { method } = payload
 
     const user = await User.findById(id)
@@ -71,8 +74,9 @@ class Service {
 
     const sub = new Subscription({
       amount: 10,
-      currency: "usd",
-      method, due_at: dayjs().add(30, "days")
+      currency: "usd", 
+      payment_method: method, 
+      due_at: dayjs().add(30, "days")
     })
 
     if(compareStrings(method, "wallet")){
@@ -91,6 +95,13 @@ class Service {
         amount: sub.amount,
         type: "debit"
       })
+
+      return responsHandler(
+        res, 
+        "Subscripton payment completed", 
+        StatusCodes.OK, 
+        null
+      )
     }
 
     if(compareStrings(method, "card")){
@@ -102,7 +113,36 @@ class Service {
         payment_method: card.reference,
         metadata: { sub: sub.id }
       })
+      sub.metadata = { payment: result.id }
+      await sub.save()
       //TODO: handle the webhook
+
+      return responsHandler(
+        res, 
+        "Processing payment...", 
+        StatusCodes.CREATED, 
+        null
+      )
+    }
+
+    // implement subscription
+    if(compareStrings(payload.method, "paypal")){
+      createPayment(sub.amount, "Tidyplus subscription", "subscription", async (err, result) => {
+        if(err){
+          throw new ServiceError(err.message, err.httpStatusCode, err.response.details)
+        }
+        else {
+          sub.metadata = { payment: result.id }
+          await sub.save()
+
+          return responsHandler(
+            res, 
+            "Processing payment...", 
+            StatusCodes.CREATED, 
+            { link: result.link, id: result.id }
+          )
+        }
+      })
     }
     
     await sub.save()

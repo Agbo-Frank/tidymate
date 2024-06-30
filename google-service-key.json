@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "flexipay-51bcd",
+  "private_key_id": "772027c26ffae783387c8946aa51747e19f9c458",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCiaGXz4xpJwJl+\niCN4qA+sW1RTDo8dRB9dnFk68nNwDE+PHQSg756R4VWfazmsn1e6n6Yw1mLZnhFE\nmoogvDlFn/DS7K/tzjTOCsHFiJCkuNbLCpWGSDAEzwVyDbiHxcZSRAPv2VvgWSnQ\noZXdFWXWs82/Z2eIF42lgjqRkbzQDN8VuHgkRgMiwV37HTOGE9kryT+1TOt3+/zm\nFpDWYzAzx1WAFxYchn1AS3xBisaN/OLEsKgn9vPZwXwyWKfEri6M8R+ouH6yDP7C\n7C0SbKSj8CjbQgnae5fEd7lStTtnn/if6JYTYnGcDkxK0aGD3BYYycuR0ZTuulcs\nMoFGr1I7AgMBAAECggEABSuqt0mPMDLsEB24d2JuYU/lDuHjR4zALORJ6PkIGNSj\ngcxsNc17MGzKo5Ev3GGUUvI7QcnJiuEf7p228RTdA+z0J1r2vOz4PGkWQzo2VLA3\n0m4LVaOdt8F5jGiIa/YtergEohG6/ZkJHkXOtiO0wtGlpsbdgnUxgsfzImhP6RW6\nxL9NTUF6wrsXAdYtujbWvncb+leQCKVHIzKykbAWvrtgLT2kT1MavqEXqeYo3KHL\nHuN+/lWEAVDd78h9oS9wuEg1TIApKB6mCfqjl7+Kp2aaPkzpHuXIC9jD29OrtlYU\njMuojUFkf7ZPCJeTQi7QYE/TWFmYiVYsgwvSIHbteQKBgQDiPXz9sF//57G8mpW2\nwGP/TJM0K0mtFHMrLmxOJw/s4n/h0q8mXVNdPyo5z9ucuHukq8ClvW+kkE9k1gxF\nyaKYVcKiK0JCiU9SRFjRM3CulkSTf87Hnb4IXoBapvWuLAFIQtKxcxM6yvWVA9d8\nQ61H3HTM4mo4Sj8KwfAubs9FcwKBgQC3xWPmWsXtHry4wlrB/AgyDR3R8MN1VHdc\nq7kDJMjvK/cpAQs8QBmI8KXLP5Xq+ql0fVkMro+ce1YWDciPK+4XM1NZg+iBM4Af\noGrMw0zjt8DaYl0PlqAe32UIWEBvuWf7SIJACx724XA6Q8YUmBV2T3KLdFWGHwbR\n0TguH3XOGQKBgQCYeqylJpxtEzE9VkqVMzGyPV/xB0POvTup3M3uFnGrTDS4dJDL\noJaxAANrl2YCSGw83e0nR3fZR9HaulDnMDC/zv0w40rzISwu3BWoWa0WXfy2FKu+\n6dfMODT15BUtYEc09qSeKFrLg0LlPgObotlE15Z5CBhi+9dlXrSL9u8HdQKBgG37\nTlxwev/8Y0nX12U9JtJ9kxkwFGpF0OG/TAybmT26fEMoAsdePWn9S9wmA90Lgxra\nYc77MaufDNhKC3vT+Lwd1YY/MYkRf15uLTy6rWujb2HDeJp5tP6FB/xEhNvYhGiY\n7orRnQh3xyi3ovZ0RnP1/EGFsCGCtBwiMJM59NERAoGBALOWAkptQzBk0FOhyJGf\ntaNMW8YbZKmypoR5s+RjbZdz6tcd3iTJKpQkWqQpaT7e/lacGOrh1NGZowWxe3qV\nE6X8/4l2RYjN72US5r+QoygIIIq6RPX1DQaF0Ltlje67eHyowddLjp0xY2nzE4i5\nCrx42mSwzCUW/fsa+dmnsUZY\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-jq2oc@flexipay-51bcd.iam.gserviceaccount.com",
+  "client_id": "117748129741567680188",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-jq2oc%40flexipay-51bcd.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

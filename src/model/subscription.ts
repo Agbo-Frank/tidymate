@@ -3,16 +3,17 @@ import { Schema, model } from "mongoose"
 export interface ISubscription {
   amount: number
   currency: string
-  method: string
+  payment_method: string
   user: string
   status: string 
   due_at: string
   card: string
+  metadata: any
 }
 
 const subscription = new Schema<ISubscription>({
   amount: Number,
-  method: String,
+  payment_method: String,
   currency: String,
   user: String,
   status: {
@@ -21,6 +22,7 @@ const subscription = new Schema<ISubscription>({
   }, 
   due_at: String,
   card: String,
+  metadata: Schema.Types.Mixed
 }, {
   timestamps: {
     createdAt: "created_at",

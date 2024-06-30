@@ -1,7 +1,15 @@
 import bcrypt from "bcrypt"
 import { validationResult } from "express-validator";
-import { UnprocessableContent } from "./service-error";
+import { BadRequestException, NotFoundException, ServiceError, UnprocessableContent } from "./service-error";
 import { Response, Request } from "express"
+import { IChargePayload } from "./interface";
+import Wallet from "../model/wallet";
+import numeral from "numeral";
+import Transaction from "../model/transaction";
+import { StatusCodes } from "http-status-codes";
+import Card from "../model/cards";
+import { chargeCard } from "../service/stripe/charge-card";
+import { createPayment } from "../service/paypal";
 
 export function randNum(len = 4){
   const numbers = '0123456789'
@@ -89,3 +97,49 @@ export const pagingParams = (req: Request) => {
 
   return {limit, page, pagination: paginate}
 }
+
+export const charge = async (method: string, payload: IChargePayload, cb: (err, result) => any) => {
+  try {
+    if(compareStrings(method, "wallet")){
+      const wallet = await Wallet.findOne({ user: payload.user })
+      if(wallet.balance < payload.amount){
+        throw new BadRequestException("Insufficient balance, please fund your wallet")
+      }
+      wallet.balance = numeral(wallet.balance).subtract(payload.amount).value()
+      await wallet.save()
+
+      const tx = await Transaction.create({
+        wallet: wallet.id,
+        status: "successful",
+        amount: payload.amount,
+        narration: payload.description,
+        type: "debit"
+      })
+
+      cb(null, tx)
+    }
+    else if(compareStrings(method, "card")){
+      const card = await Card.findById(payload.card)
+      if(!card) throw new NotFoundException("card not found");
+
+      const result = await chargeCard({
+        amount: payload.amount, 
+        payment_method: card.reference,
+        metadata: payload.metadata
+      })
+
+      cb(null, result)
+    }
+    else if(compareStrings(method, "paypal")){
+      createPayment(payload.amount, payload.description, payload.resources, async (err, result) => {
+        if(err){
+          throw new ServiceError(err.message, err.httpStatusCode, err.response.details)
+        }
+        else return cb(null, result)
+      })
+    }
+    else throw new BadRequestException("Payment method not supported")
+  } catch (error) {
+    return cb(error, null)
+  }
+}  

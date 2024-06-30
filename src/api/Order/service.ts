@@ -1,8 +1,8 @@
 import dayjs from "dayjs";
 import Order from "../../model/order";
 import { IAddCleaner, ICreateOrder, IProcessPayment, IReOrder, IReview, ITip } from "./interface";
-import { BadRequestException, NotFoundException } from "../../utility/service-error";
-import { compareStrings } from "../../utility/helpers";
+import { BadRequestException, NotFoundException, ServiceError } from "../../utility/service-error";
+import { compareStrings, responsHandler } from "../../utility/helpers";
 import Wallet from "../../model/wallet";
 import Card from "../../model/cards";
 import numeral from "numeral"
@@ -10,6 +10,9 @@ import { chargeCard } from "../../service/stripe/charge-card";
 import Transaction from "../../model/transaction";
 import Cleaner, { ICleaner } from "../../model/cleaner";
 import Review from "../../model/review";
+import { Response} from "express"
+import { createPayment } from "../../service/paypal";
+import { StatusCodes } from "http-status-codes";
 
 class Service {
   async create(payload: ICreateOrder, user: string){
@@ -69,7 +72,7 @@ class Service {
     return { message: "Cleaners added successfully", data }
   }
 
-  async processPayment(payload: IProcessPayment, user: string){
+  async processPayment(res: Response, payload: IProcessPayment, user: string){
     const order = await Order.findById(payload.order)
     if(!order) throw new NotFoundException("Order not found");
 
@@ -83,12 +86,22 @@ class Service {
       
       order.paid = true
 
-      await Transaction.create({
+      await wallet.save()
+      await order.save()
+      
+      const tx = await Transaction.create({
         wallet: wallet.id,
         status: "successful",
         amount: order.amount,
         type: "debit"
       })
+
+      return responsHandler(
+        res, 
+        "Payment completed", 
+        StatusCodes.OK, 
+        tx
+      )
     }
 
     if(compareStrings(payload.method, "card")){
@@ -101,12 +114,35 @@ class Service {
         metadata: { order: order.id }
       })
       order.metadata = { payment: result.id }
+      await order.save()
       //TODO: handle the webhook
+
+      return responsHandler(
+        res, 
+        "Processing payment...", 
+        StatusCodes.CREATED, 
+        null
+      )
     }
 
-    await order.save()
+    if(compareStrings(payload.method, "paypal")){
+      createPayment(order.amount, "Order payment", "order", async (err, result) => {
+        if(err){
+          throw new ServiceError(err.message, err.httpStatusCode, err.response.details)
+        }
+        else {
+          order.metadata = { payment: result.id }
+          await order.save()
 
-    return { message: "", data: null }
+          return responsHandler(
+            res, 
+            "Processing payment...", 
+            StatusCodes.CREATED, 
+            { link: result.link, id: result.id }
+          )
+        }
+      })
+    }
   }
 
   async getOrders(user: string){
