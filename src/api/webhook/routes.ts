@@ -3,6 +3,6 @@ import cltr from "./controller"
 
 const router = Router()
 
-router.get("/webhook/paypal/:resources/:status", cltr.paypal)
+router.get("/callback/paypal/:resources/:status", cltr.paypal)
 
 export default router

@@ -11,7 +11,7 @@ import { chargeCard } from "../../service/stripe/charge-card";
 import Wallet from "../../model/wallet";
 import numeral from "numeral";
 import Transaction from "../../model/transaction";
-import { createPayment } from "../../service/paypal";
+import { createPayment, createSubscription } from "../../service/paypal";
 import { Response } from "express";
 import { StatusCodes } from "http-status-codes";
 
@@ -104,7 +104,7 @@ class Service {
       )
     }
 
-    if(compareStrings(method, "card")){
+    else if(compareStrings(method, "card")){
       const card = await Card.findById(payload.card)
       if(!card) throw new NotFoundException("card not found");
       
@@ -124,10 +124,8 @@ class Service {
         null
       )
     }
-
-    // implement subscription
-    if(compareStrings(payload.method, "paypal")){
-      createPayment(sub.amount, "Tidyplus subscription", "subscription", async (err, result) => {
+    else if(compareStrings(payload.method, "paypal")){
+      createSubscription(10, async (err, result) => {
         if(err){
           throw new ServiceError(err.message, err.httpStatusCode, err.response.details)
         }
@@ -143,6 +141,9 @@ class Service {
           )
         }
       })
+    }
+    else {
+      throw new BadRequestException("Payment method not supported")
     }
     
     await sub.save()

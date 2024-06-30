@@ -96,12 +96,7 @@ class Service {
         type: "debit"
       })
 
-      return responsHandler(
-        res, 
-        "Payment completed", 
-        StatusCodes.OK, 
-        tx
-      )
+      return responsHandler(res, "Payment completed", StatusCodes.OK, tx)
     }
 
     if(compareStrings(payload.method, "card")){

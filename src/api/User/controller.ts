@@ -40,6 +40,16 @@ class Controller {
       next(error)
     }
   }
+
+  async subscribe(req: any, res: Response, next: NextFunction){
+    try {
+      validateRequest(req)
+      
+      return service.subscribe(res, req.body, req.user)
+    } catch (error) {
+      next(error)
+    }
+  }
 }
 
 export default new Controller

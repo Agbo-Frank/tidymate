@@ -1,14 +1,13 @@
 import { NextFunction, Response } from "express"
-import { executePayment } from "../../service/paypal"
-import Transaction, { ITransaction } from "../../model/transaction"
-import { BadRequestException, NotFoundException, ServiceError } from "../../utility/service-error"
-import Order, { IOrder } from "../../model/order"
+import Transaction from "../../model/transaction"
+import { NotFoundException, ServiceError } from "../../utility/service-error"
+import Order from "../../model/order"
 import { compareStrings, isEmpty, responsHandler } from "../../utility/helpers"
 import Wallet from "../../model/wallet"
 import numeral from "numeral"
-import { Document } from "mongoose"
 import { StatusCodes } from "http-status-codes"
 import Subscription from "../../model/subscription"
+import { executePayment, executeSubscription } from "../../service/paypal"
 
 class Controller {
 
@@ -42,6 +41,26 @@ class Controller {
     if(compareStrings(status, "failed")){
       //TODO: handled failed payment
       return;
+    }
+
+    if(compareStrings(resources, "subscription")){
+      console.log("Query: ",req.query)
+      return executeSubscription(req.query?.token, async (err, result) => {
+        if(err) throw new ServiceError(err.message, err.httpStatusCode, err.response.details);
+        console.log("Result: ", result)
+        
+        if(!compareStrings(result.state, "Active") || isEmpty(sub)) {
+          throw new ServiceError(
+            result?.failure_reason || "Payment not approved", 
+            result.httpStatusCode, 
+          );
+        }
+
+        sub.status = "active"
+        await sub.save()
+        return responsHandler(res, "Subscripton payment completed", StatusCodes.OK, result)
+        //TODO: check for failed subscription
+      })
     }
     
     return executePayment(
