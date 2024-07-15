@@ -113,7 +113,7 @@ export const charge = async (method: string, payload: IChargePayload, cb: (err, 
         status: "successful",
         amount: payload.amount,
         narration: payload.description,
-        type: "debit"
+        type: "charge"
       })
 
       cb(null, tx)

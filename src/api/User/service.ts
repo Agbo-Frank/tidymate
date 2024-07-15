@@ -92,8 +92,9 @@ class Service {
       await Transaction.create({
         wallet: wallet.id,
         status: "successful",
+        narration: "Tidyplus subscription",
         amount: sub.amount,
-        type: "debit"
+        type: "charge"
       })
 
       return responsHandler(

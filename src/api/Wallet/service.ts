@@ -20,7 +20,7 @@ class Service {
     if(!wallet) throw new NotFoundException("User not found");
 
     const tx = new Transaction({
-      amount, type: "credit",
+      amount, type: "funding",
       wallet: wallet?.id,
       payment_method: method
     })

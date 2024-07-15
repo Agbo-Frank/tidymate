@@ -3,8 +3,8 @@ import mongoosePaginate from 'mongoose-paginate-v2';
 
 export interface ITransaction {
   amount: number
-  status: string | "successful"
-  type: string | "credit" | "debit"
+  status: string | "successful" | "pending" | "failed"
+  type: string | "funding" | "charge" | "commission"
   payment_method: string
   wallet: string
   narration: string
@@ -16,6 +16,7 @@ const transaction = new Schema<ITransaction>({
   status: String,
   type: String,
   wallet: String,
+  narration: String,
   payment_method: String,
   metadata: Schema.Types.Mixed
 }, {

@@ -92,8 +92,9 @@ class Service {
       const tx = await Transaction.create({
         wallet: wallet.id,
         status: "successful",
+        narration: "Service charge",
         amount: order.amount,
-        type: "debit"
+        type: "charge"
       })
 
       return responsHandler(res, "Payment completed", StatusCodes.OK, tx)
@@ -205,7 +206,14 @@ class Service {
   }
 
   complete(){}
-  confirmDelivery(){}
+  confirmDelivery(){
+    /**
+     * during confirmation ensure the user(homeowner) has completed payment
+     * create a transaction and with a type commission and status pending
+     * add tip if there's any
+     * 
+     */
+  }
 
   private selectLeader(users: ICleaner[]){
     let highest = -Infinity;
