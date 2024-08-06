@@ -7,7 +7,6 @@ interface IOrderCleaner {
   leader: boolean
 }
 
-//TODO: Add duration, completed at and started at timestamp to be able to obtain the extra
 export interface IOrder {
   user: string | typeof Types.ObjectId
   service: string

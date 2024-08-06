@@ -14,6 +14,8 @@ import Transaction from "../../model/transaction";
 import { createPayment, createSubscription } from "../../service/paypal";
 import { Response } from "express";
 import { StatusCodes } from "http-status-codes";
+import Notification from "../../model/notifications";
+import { IPagination } from "../../utility/interface";
 
 class Service {
   async profile(id: string){
@@ -148,6 +150,24 @@ class Service {
     }
     
     await sub.save()
+  }
+
+  async notifications(id: string, pagination: IPagination){
+    const user = await User.findById(id)
+    if(!user) throw new NotFoundException("User not found");
+
+    const data = await Notification.paginate(
+      {
+        recipient: {$in: ["all", id]},
+        created_at: {$gt: user.created_at}
+      }, 
+      { 
+        ...pagination, 
+        sort: { created_at: "desc" }
+      }
+    )
+
+    return { data, message: "Notifications retrieved successfully"}
   }
 }
 

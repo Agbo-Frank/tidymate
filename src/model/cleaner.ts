@@ -10,6 +10,7 @@ export interface IDoc {
 export interface ICleaner {
   user: string | typeof Types.ObjectId
   code: string
+  // TODO: add is active
   earnings: number
   verified: boolean
   completed_order: number

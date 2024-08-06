@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { responsHandler, validateRequest } from "../../utility/helpers";
+import { pagingParams, responsHandler, validateRequest } from "../../utility/helpers";
 import service from "./service";
 import { StatusCodes } from "http-status-codes";
 
@@ -46,6 +46,16 @@ class Controller {
       validateRequest(req)
       
       return service.subscribe(res, req.body, req.user)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async notifications(req: any, res: Response, next: NextFunction){
+    try {
+      const { message, data } = await service.notifications(req.user, pagingParams(req))
+
+      return responsHandler(res, message, StatusCodes.CREATED, data)
     } catch (error) {
       next(error)
     }

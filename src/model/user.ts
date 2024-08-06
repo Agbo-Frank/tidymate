@@ -10,6 +10,7 @@ export interface IUser {
   roles: string
   email_verified: boolean
   referral_code: string
+  created_at: string
   cleaner: string | typeof Types.ObjectId
 } 
 
