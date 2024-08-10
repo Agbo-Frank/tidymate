@@ -6,6 +6,7 @@ import card from "./Card/router"
 import wallet from "./Wallet/routes"
 import webhook from "./webhook/routes"
 import cleaner from "./Cleaner/routes"
+import misc from "./mics/routes"
 import guard, { guardValid } from "../middleware/guard";
 
 export default function(app: Application){
@@ -16,4 +17,5 @@ export default function(app: Application){
   app.use("/", guardValid, guard, user)
   app.use("/", guardValid, guard, order)
   app.use("/", guardValid, guard, cleaner)
+  app.use("/", guardValid, guard, misc)
 }

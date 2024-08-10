@@ -16,12 +16,13 @@ import User from "../../model/user";
 
 class Service {
   async create(payload: ICreateOrder, user: string){
-    const { service, note, start_date, location, config } = payload
+    const { service, note, num_cleaners = 1, start_date, location, config } = payload
     const order = new Order({
       service, note, 
-      user,
+      user, 
+      num_cleaners,
       location, config,
-      scheduled_at: dayjs.unix(start_date).toISOString()
+      scheduled_at: dayjs(start_date).toISOString()
     })
 
     await order.save()

@@ -2,6 +2,7 @@ export interface ICreateOrder {
   service: string
   note: string
   start_date: number
+  num_cleaners: number
   config: Record<string, number>
   location: {
     address: string,

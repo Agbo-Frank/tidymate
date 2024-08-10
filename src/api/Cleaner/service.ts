@@ -128,7 +128,7 @@ class Service {
       const cleaner = await Cleaner.findOne({ user })
       if(!cleaner) throw new NotFoundException("Cleaner not found");
 
-      const result = await cloudinary.uploader.upload(image, {folder: '/docs'})
+      const result = await cloudinary.uploader.upload(image, { folder: '/docs' })
       if(!result) throw new BadRequestException("Couldn't upload docs, please try again")
 
       const doc = cleaner.docs.find(d => compareStrings(d.type, type))

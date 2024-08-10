@@ -61,13 +61,13 @@ const order = new Schema<IOrder>({
     ref: "user"
   },
   config: {
-    bedroom: {type: Number, default: 0},
-    livingroom: {type: Number, default: 0},
-    bathroom: {type: Number, default: 0},
-    store: {type: Number, default: 0},
-    balcony: {type: Number, default: 0}
+    bedroom: { type: Number, default: 0 },
+    livingroom: { type: Number, default: 0 },
+    bathroom: { type: Number, default: 0 },
+    store: { type: Number, default: 0 },
+    balcony: { type: Number, default: 0 }
   },
-  num_cleaners: Number,
+  num_cleaners: { type: Number, default: 1 },
   estimated_duration: Number,
   actual_duration: Number,
   images: [ String ],

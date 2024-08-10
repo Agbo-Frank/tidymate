@@ -13,6 +13,7 @@ export interface IUser {
   email: string
   phone_number: string
   password: string
+  avatar: string
   balance: number
   currency: string
   roles: string
@@ -23,6 +24,10 @@ export interface IUser {
 } 
 
 const user = new Schema<IUser>({
+  avatar: {
+    type: String,
+    default: null
+  },
   first_name: String,
   last_name: String,
   email: {
