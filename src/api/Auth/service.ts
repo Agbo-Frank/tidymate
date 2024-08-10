@@ -1,7 +1,6 @@
 import Cleaner from "../../model/cleaner";
 import Referral from "../../model/referral";
 import User from "../../model/user";
-import Wallet from "../../model/wallet";
 import mail from "../../service/mail";
 import { compareStrings, hashPassword, isEmpty, randAlphaNum } from "../../utility/helpers";
 import jwt from "../../utility/jwt";
@@ -19,9 +18,9 @@ class Service {
     const is_match = await bcrypt.compare(password, user.password)
     if(!is_match) throw new BadRequestException(`Incorrect password`);
   
-    const data = jwt.create({roles: user.roles, id: user?.id})
+    const token = jwt.create({roles: user.roles, id: user?.id})
 
-    return { message: "User login successful", data }
+    return { message: "User login successful", data: { token, user } }
   }
 
   async register(payload: IRegister){
@@ -37,7 +36,6 @@ class Service {
       password,
       referral_code: randAlphaNum(8)
     })
-    const wallet = new Wallet({user: user.id})
 
     if(!isEmpty(referral_code)){
       const referrer = await User.findOne({ referral_code })
@@ -52,8 +50,6 @@ class Service {
     }
 
     await user.save()
-    await wallet.save()
-    console.log(user)
     await mail.sendOTP(email)
 
     return { message: "Registration successful", data: null}

@@ -7,10 +7,7 @@ class Controller {
 
   async profile(req: any, res: Response, next: NextFunction){
     try {
-      validateRequest(req)
-
       const { message, data } = await service.profile(req.user)
-
       return responsHandler(res, message, StatusCodes.OK, data)
     } catch (error) {
       next(error)

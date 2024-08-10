@@ -1,7 +1,6 @@
 import Card from "../../model/cards";
 import { Response} from "express"
 import Transaction from "../../model/transaction";
-import Wallet from "../../model/wallet";
 import { createPayment } from "../../service/paypal";
 import { chargeCard } from "../../service/stripe/charge-card";
 import { compareStrings, responsHandler } from "../../utility/helpers";
@@ -9,19 +8,20 @@ import { IPagination } from "../../utility/interface";
 import { BadRequestException, NotFoundException, ServiceError } from "../../utility/service-error";
 import { IDeposit } from "./interface";
 import { StatusCodes } from "http-status-codes";
+import User from "../../model/user";
 
 class Service {
 
   //@ts-ignore
-  async deposit(res: Response, payload: IDeposit, user: string){
+  async deposit(res: Response, payload: IDeposit, user_id: string){
     const { amount, method } = payload
 
-    const wallet = await Wallet.findOne({ user })
-    if(!wallet) throw new NotFoundException("User not found");
+    const user = await User.findById(user_id)
+    if(!user) throw new NotFoundException("User not found");
 
     const tx = new Transaction({
       amount, type: "funding",
-      wallet: wallet?.id,
+      user: user.id,
       payment_method: method
     })
 
@@ -67,11 +67,8 @@ class Service {
   withdraw(){}
 
   async transactions(user: string, pagination: IPagination){
-    const wallet = await Wallet.findOne({ user })
-    if(!wallet) throw new NotFoundException("Wallet not found")
-
     const data = await Transaction.paginate(
-      { wallet: wallet.id }, 
+      { user }, 
       {...pagination, sort: { updated_at: "desc" }}
     )
 

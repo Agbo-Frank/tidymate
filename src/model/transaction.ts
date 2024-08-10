@@ -6,7 +6,7 @@ export interface ITransaction {
   status: string | "successful" | "pending" | "failed"
   type: string | "funding" | "charge" | "commission"
   payment_method: string
-  wallet: string
+  user: string
   narration: string
   metadata: any
 }
@@ -15,7 +15,7 @@ const transaction = new Schema<ITransaction>({
   amount: Number,
   status: String,
   type: String,
-  wallet: String,
+  user: String,
   narration: String,
   payment_method: String,
   metadata: Schema.Types.Mixed

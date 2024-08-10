@@ -9,11 +9,11 @@ import cleaner from "./Cleaner/routes"
 import guard, { guardValid } from "../middleware/guard";
 
 export default function(app: Application){
-  app.use(auth)
-  app.use(webhook)
-  app.use(guardValid, guard, wallet)
-  app.use(guardValid, guard, card)
-  app.use(guardValid, guard, user)
-  app.use(guardValid, guard, order)
-  app.use(guardValid, guard, cleaner)
+  app.use("/", auth)
+  app.use("/", webhook)
+  app.use("/", guardValid, guard, wallet)
+  app.use("/", guardValid, guard, card)
+  app.use("/", guardValid, guard, user)
+  app.use("/", guardValid, guard, order)
+  app.use("/", guardValid, guard, cleaner)
 }

@@ -1,12 +1,20 @@
 import { Schema, model, PaginateModel, Types } from "mongoose";
 import mongoosePaginate from 'mongoose-paginate-v2';
 
+export const methods = {
+  "wallet": "wallet",
+  "card": "card",
+  "paypal": "paypal"
+}
+
 export interface IUser {
   first_name: string
   last_name: string
   email: string
   phone_number: string
   password: string
+  balance: number
+  currency: string
   roles: string
   email_verified: boolean
   referral_code: string
@@ -26,6 +34,11 @@ const user = new Schema<IUser>({
   email_verified: {
     type: Boolean,
     default: false
+  },
+  currency: String,
+  balance: {
+    type: Number,
+    default: 0
   },
   phone_number: {
     type: String,

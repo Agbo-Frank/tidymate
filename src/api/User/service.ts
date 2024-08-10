@@ -8,7 +8,6 @@ import { IChangePassword } from "./interface";
 import bcrypt from "bcrypt"
 import Card from "../../model/cards";
 import { chargeCard } from "../../service/stripe/charge-card";
-import Wallet from "../../model/wallet";
 import numeral from "numeral";
 import Transaction from "../../model/transaction";
 import { createPayment, createSubscription } from "../../service/paypal";
@@ -35,7 +34,7 @@ class Service {
       first_name: payload?.first_name,
       last_name: payload?.last_name,
       phone_number: payload?.phone_number
-    }, { new: true})
+    }, { new: true })
 
     return { message: "User profile updated successfully", data: user}
   }
@@ -82,17 +81,16 @@ class Service {
     })
 
     if(compareStrings(method, "wallet")){
-      const wallet = await Wallet.findOne({ user })
-      if(wallet.balance < sub.amount){
+      if(user.balance < sub.amount){
         throw new BadRequestException("Insufficient balance, please fund your wallet")
       }
-      wallet.balance = numeral(wallet.balance).subtract(sub.amount).value()
-      await wallet.save()
+      user.balance = numeral(user.balance).subtract(sub.amount).value()
+      await user.save()
       
       sub.status = "active"
 
       await Transaction.create({
-        wallet: wallet.id,
+        user: user.id,
         status: "successful",
         narration: "Tidyplus subscription",
         amount: sub.amount,

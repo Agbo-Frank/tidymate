@@ -3,11 +3,11 @@ import Transaction from "../../model/transaction"
 import { NotFoundException, ServiceError } from "../../utility/service-error"
 import Order from "../../model/order"
 import { compareStrings, isEmpty, responsHandler } from "../../utility/helpers"
-import Wallet from "../../model/wallet"
 import numeral from "numeral"
 import { StatusCodes } from "http-status-codes"
 import Subscription from "../../model/subscription"
 import { executePayment, executeSubscription } from "../../service/paypal"
+import User from "../../model/user"
 
 class Controller {
 
@@ -28,7 +28,7 @@ class Controller {
     }
     else if(compareStrings(resources, "order")){
       order = await Order.findOne(filter)
-      if(!tx) throw new NotFoundException("Order not found")
+      if(!order) throw new NotFoundException("Order not found")
     }
     else if(compareStrings(resources, "subscription")){
       sub = await Subscription.findOne(filter)
@@ -80,11 +80,11 @@ class Controller {
         
           if(!isEmpty(tx)){
             tx.status = "successful"
-            const wallet = await Wallet.findById(tx.wallet)
-            if(!wallet) throw new NotFoundException("Wallet not found")
-            wallet.balance = numeral(wallet.balance).add(tx.amount).value()
+            const user = await User.findById(tx.user)
+            if(!user) throw new NotFoundException("User not found")
+            user.balance = numeral(user.balance).add(tx.amount).value()
 
-            await wallet.save()
+            await user.save()
             await tx.save()
             return responsHandler(res, "Payment completed", StatusCodes.OK, result)
           }

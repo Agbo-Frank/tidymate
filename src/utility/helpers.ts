@@ -3,13 +3,12 @@ import { validationResult } from "express-validator";
 import { BadRequestException, NotFoundException, ServiceError, UnprocessableContent } from "./service-error";
 import { Response, Request } from "express"
 import { IChargePayload } from "./interface";
-import Wallet from "../model/wallet";
 import numeral from "numeral";
 import Transaction from "../model/transaction";
-import { StatusCodes } from "http-status-codes";
 import Card from "../model/cards";
 import { chargeCard } from "../service/stripe/charge-card";
 import { createPayment } from "../service/paypal";
+import User from "../model/user";
 
 export function randNum(len = 4){
   const numbers = '0123456789'
@@ -101,7 +100,7 @@ export const pagingParams = (req: Request) => {
 export const charge = async (method: string, payload: IChargePayload, cb: (err, result) => any) => {
   try {
     if(compareStrings(method, "wallet")){
-      const wallet = await Wallet.findOne({ user: payload.user })
+      const wallet = await User.findById(payload.user)
       if(wallet.balance < payload.amount){
         throw new BadRequestException("Insufficient balance, please fund your wallet")
       }

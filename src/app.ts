@@ -11,6 +11,7 @@ const logger = new Logger("server")
 
 const app = express();
 
+
 redis.connect();
 connectMongodb()
 

@@ -1,5 +1,5 @@
 import { body } from "express-validator";
-import { methods } from "../../model/wallet";
+import { methods } from "../../model/user";
 
 export default {
   changePassword: [

@@ -3,7 +3,6 @@ import Order from "../../model/order";
 import { IAddCleaner, ICreateOrder, IProcessPayment, IReOrder, IReview, ITip } from "./interface";
 import { BadRequestException, NotFoundException, ServiceError } from "../../utility/service-error";
 import { compareStrings, responsHandler } from "../../utility/helpers";
-import Wallet from "../../model/wallet";
 import Card from "../../model/cards";
 import numeral from "numeral"
 import { chargeCard } from "../../service/stripe/charge-card";
@@ -13,6 +12,7 @@ import Review from "../../model/review";
 import { Response} from "express"
 import { createPayment } from "../../service/paypal";
 import { StatusCodes } from "http-status-codes";
+import User from "../../model/user";
 
 class Service {
   async create(payload: ICreateOrder, user: string){
@@ -26,7 +26,7 @@ class Service {
 
     await order.save()
 
-    return {message: "Order created successfully", data: order}
+    return { message: "Order created successfully", data: order }
   }
 
   async reorder(payload: IReOrder, user: string){
@@ -72,25 +72,25 @@ class Service {
     return { message: "Cleaners added successfully", data }
   }
 
-  async processPayment(res: Response, payload: IProcessPayment, user: string){
+  async processPayment(res: Response, payload: IProcessPayment, user_id: string){
     const order = await Order.findById(payload.order)
     if(!order) throw new NotFoundException("Order not found");
 
     if(compareStrings(payload.method, "wallet")){
-      const wallet = await Wallet.findOne({ user })
-      if(wallet.balance < order.amount){
+      const user = await User.findById(user_id)
+      if(user.balance < order.amount){
         throw new BadRequestException("Insufficient balance, please fund your wallet")
       }
-      wallet.balance = numeral(wallet.balance).subtract(order.amount).value()
-      await wallet.save()
+      user.balance = numeral(user.balance).subtract(order.amount).value()
+      await user.save()
       
       order.paid = true
 
-      await wallet.save()
+      await user.save()
       await order.save()
       
       const tx = await Transaction.create({
-        wallet: wallet.id,
+        user: user_id,
         status: "successful",
         narration: "Service charge",
         amount: order.amount,
@@ -187,18 +187,20 @@ class Service {
     return { message: "Thanks for your review", data }
   }
 
-  async tip(payload: ITip, user: string){
+  async tip(payload: ITip, user_id: string){
     const order = await Order.findById(payload.order)
     if(!order) throw new NotFoundException("Order not found");
 
-    const wallet = await Wallet.findOne({ user })
-    if(!wallet) throw new NotFoundException("Wallet not found");
-    if(wallet.balance < payload.amount) throw new BadRequestException("Insufficient balance to cover tip");
+    const user = await User.findById(user_id)
+    if(!user) throw new NotFoundException("Wallet not found");
+    if(user.balance < payload.amount) {
+      throw new BadRequestException("Insufficient balance to cover tip");
+    }
 
-    wallet.balance = numeral(wallet.balance).subtract(payload.amount).value()
+    user.balance = numeral(user.balance).subtract(payload.amount).value()
     order.tip = payload.amount
 
-    await wallet.save()
+    await user.save()
     await order.save()
 
     //TODO: disburbes the tip amoungst the cleaners
