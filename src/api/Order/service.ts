@@ -1,8 +1,8 @@
 import dayjs from "dayjs";
 import Order from "../../model/order";
 import { IAddCleaner, ICreateOrder, IProcessPayment, IReOrder, IReview, ITip } from "./interface";
-import { BadRequestException, NotFoundException, ServiceError } from "../../utility/service-error";
-import { compareStrings, responsHandler } from "../../utility/helpers";
+import { BadRequestException, NotFoundException, ServiceError, UnauthorizedException } from "../../utility/service-error";
+import { compareStrings, geocoder, responsHandler } from "../../utility/helpers";
 import Card from "../../model/cards";
 import numeral from "numeral"
 import { chargeCard } from "../../service/stripe/charge-card";
@@ -13,18 +13,31 @@ import { Response} from "express"
 import { createPayment } from "../../service/paypal";
 import { StatusCodes } from "http-status-codes";
 import User from "../../model/user";
+import History from "../../model/history";
 
 class Service {
   async create(payload: ICreateOrder, user: string){
-    const { service, note, num_cleaners = 1, start_date, location, config } = payload
+    const { service, note, num_cleaners = 1, start_date, coordinates, config } = payload
+
+    const amount = this.calculateOrderAmount(config.bedroom)
+
     const order = new Order({
-      service, note, 
-      user, 
-      num_cleaners,
-      location, config,
-      scheduled_at: dayjs(start_date).toISOString()
+      service, note, amount,
+      user, num_cleaners,
+      location: { coordinates }, config,
+      scheduled_at: dayjs.unix(start_date).toISOString()
     })
 
+    const location = await geocoder(coordinates)
+    if(location){
+      order.location.address = location.formatted_address
+      await History.create({
+        address: location.formatted_address,
+        coordinates,
+        user, name: location.formatted_address,
+        // type:
+      })
+    }
     await order.save()
 
     return { message: "Order created successfully", data: order }
@@ -150,9 +163,11 @@ class Service {
   async getOrder(id: string, user: string){
     let data = await Order.findById(id)
     if(!data) throw new NotFoundException("Order not found");
-    if(data.user.toString() !== user && data.cleaners.every(c => c.user !== user)) data = null;
+    if(data.user.toString() !== user && data.cleaners.every(c => c.user !== user)){
+      throw new UnauthorizedException("Order not found")
+    }
 
-    return {message: "Order retreved successfully", data}
+    return {message: "Order retreved successfully", data }
   }
 
   async cancel(_id: string, user: string){
@@ -235,6 +250,14 @@ class Service {
     }));
   }
   
+  private calculateOrderAmount(num_of_bedrooms){
+    const baserate = 30;
+    const ave_hrs_per_room = 1;
+
+    const totalHours = num_of_bedrooms * ave_hrs_per_room;
+
+    return totalHours * baserate;
+  }
 }
 
-export default new Service
+export default new Service()

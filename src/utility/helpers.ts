@@ -9,6 +9,8 @@ import Card from "../model/cards";
 import { chargeCard } from "../service/stripe/charge-card";
 import { createPayment } from "../service/paypal";
 import User from "../model/user";
+import axios from "axios";
+import { GOOGLE_API_KEY } from "./config";
 
 export function randNum(len = 4){
   const numbers = '0123456789'
@@ -142,3 +144,25 @@ export const charge = async (method: string, payload: IChargePayload, cb: (err, 
     return cb(error, null)
   }
 }  
+
+export const geocoder = async (payload: string | number[]) => {
+  try {
+    const params = new URLSearchParams()
+    params.append("key", GOOGLE_API_KEY)
+    if(typeof payload === "string"){
+      params.append("address", payload);
+    }
+    else params.append("latlng", payload.join(","));
+
+    const { data } = await axios.get("https://maps.googleapis.com/maps/api/geocode/json?" + params.toString())
+    if(data?.status !== "OK") throw new BadRequestException(data?.error_message)
+    const { formatted_address, geometry } = data.results[0]
+    return {
+      formatted_address,
+      coordinates: [ geometry?.location?.lat, geometry?.location?.lng ]
+    }
+  } catch (error) {
+    console.error(error)
+    return null
+  }
+} 

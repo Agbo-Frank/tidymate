@@ -3,9 +3,9 @@ import { body } from "express-validator";
 export default {
   create: [
     body("service").notEmpty().withMessage("Service is required"),
-    body("note").notEmpty().withMessage("Note is required"),
-    body("location.address").notEmpty().withMessage("Address is required"),
-    body("location.coordinates").notEmpty().withMessage("Coordinates is required").isArray().withMessage("Invalid coordinate format"),
+    // body("note").notEmpty().withMessage("Note is required"),
+    // body("location.address").notEmpty().withMessage("Address is required"),
+    body("coordinates").notEmpty().withMessage("Coordinates is required").isArray().withMessage("Invalid coordinate format"),
     body("start_date").notEmpty().withMessage("Start date is required").isNumeric().withMessage("start date must be a number"),
     body("config").notEmpty().withMessage("Enter the configuration").isObject().withMessage("Config must be an object")
   ],

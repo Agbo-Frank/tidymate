@@ -4,10 +4,7 @@ export interface ICreateOrder {
   start_date: number
   num_cleaners: number
   config: Record<string, number>
-  location: {
-    address: string,
-    coordinates: number[]
-  }
+  coordinates: number[]
 }
 
 export interface IProcessPayment {

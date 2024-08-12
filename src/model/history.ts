@@ -6,10 +6,7 @@ export interface IHistory {
   address: string
   type: string
   user: string
-  location:{
-    latitude: number
-    longitude: number
-  },
+  coordinates: number[]
 } 
 
 const history = new Schema<IHistory>({
@@ -17,10 +14,7 @@ const history = new Schema<IHistory>({
   address: String,
   user: String,
   type: String,
-  location:{
-    latitude: Number,
-    longitude: Number
-  },
+  coordinates: [ Number ],
 }, {
   timestamps: {
     createdAt: "created_at",

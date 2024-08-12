@@ -34,7 +34,7 @@ export interface IOrder {
   metadata: any
   location: {
     address: string,
-    coordinates: number[]
+    coordinates: number[] //[lat, lon]
   }
 }
 
