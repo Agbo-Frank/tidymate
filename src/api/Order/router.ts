@@ -5,6 +5,7 @@ import valid from "./validator"
 const router = Router()
 
 router.post("/orders", valid.create, cltr.create)
+router.put("/orders", cltr.update)
 router.get("/orders",  cltr.getOrders)
 router.get("/orders/:id",  cltr.getOrder)
 router.put("/order/cleaner", valid.addCleaner, cltr.addCleaners)

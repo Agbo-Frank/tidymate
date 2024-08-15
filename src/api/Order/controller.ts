@@ -17,6 +17,19 @@ class Controller {
     }
   }
 
+  async update(req: any, res: Response, next: NextFunction){
+    try {
+      validateRequest(req)
+    
+      const { message, data } = await service.update(req.body, req.user)
+
+      return responsHandler(res, message, StatusCodes.CREATED, data)
+    } catch (error) {
+      console.log(error)
+      next(error)
+    }
+  }
+
   async reorder(req: any, res: Response, next: NextFunction){
     try {
       validateRequest(req)

@@ -33,6 +33,7 @@ export interface IOrder {
   paid: boolean
   status: string // pending cancelled ongoing completed
   cleaners: IOrderCleaner[]
+  payment_method: string,
   metadata: any
   location: {
     address: string,
@@ -87,6 +88,7 @@ const order = new Schema<IOrder>({
     default: "pending"
   }, // pending
   cleaners: [ orderCleaner ],
+  payment_method: String,
   location: {
     address: String,
     coordinates: [ Number ]

@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import Order from "../../model/order";
 import { IAddCleaner, ICreateOrder, IProcessPayment, IReOrder, IReview, ITip } from "./interface";
 import { BadRequestException, NotFoundException, ServiceError, UnauthorizedException } from "../../utility/service-error";
-import { compareStrings, geocoder, responsHandler } from "../../utility/helpers";
+import { compareStrings, geocoder, isEmpty, responsHandler } from "../../utility/helpers";
 import Card from "../../model/cards";
 import numeral from "numeral"
 import { chargeCard } from "../../service/stripe/charge-card";
@@ -41,6 +41,40 @@ class Service {
     await order.save()
 
     return { message: "Order created successfully", data: order }
+  }
+
+  async update(payload, user: string){
+    const { scheduled_at, coordinates, config, _id } = payload
+    const update_payload: any = {}
+
+    let order = await Order.findOne({ _id, user })
+    if(!order) throw new NotFoundException('Order not found');
+
+    if(!isEmpty(config)){
+      update_payload.amount = this.calculateOrderAmount(config.bedroom)
+      update_payload.config = config
+    }
+
+    if(!isEmpty(config)){
+      update_payload.amount = this.calculateOrderAmount(config.bedroom)
+    }
+
+    if(!isEmpty(coordinates)){
+      const location = await geocoder(coordinates)
+      if(location){
+        update_payload.location.coordinates = coordinates
+        update_payload.location.address = location.formatted_address;
+      }
+    }
+
+    if(scheduled_at){
+      update_payload.scheduled_at = dayjs.unix(scheduled_at).toISOString()
+    }
+
+    await order.updateOne(update_payload)
+    
+    order = await Order.findOne({ _id, user })
+    return { message: "Order updated successfully", data: order }
   }
 
   async reorder(payload: IReOrder, user: string){
@@ -142,6 +176,7 @@ class Service {
         }
         else {
           order.metadata = { payment: result.id }
+          order.payment_method = "paypal"
           await order.save()
 
           return responsHandler(

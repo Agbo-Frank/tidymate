@@ -16,23 +16,28 @@ class Controller {
     let tx: any = null
     let order: any = null
     let sub: any = null
+    let amount = 0
     
     const filter = {
-      "metadata.payment": req.query?.paymentId,
-      payment_method: "paypal"
+      "metadata": { payment: req.query?.paymentId },
+      // payment_method: "paypal"
     }
+    console.log(filter)
 
     if(compareStrings(resources, "wallet")){
       tx = await Transaction.findOne(filter)
-      if(!tx) throw new NotFoundException("Transaction not found")
+      if(!tx) throw new NotFoundException("Transaction not found");
+      amount = tx.amount;
     }
     else if(compareStrings(resources, "order")){
       order = await Order.findOne(filter)
-      if(!order) throw new NotFoundException("Order not found")
+      if(!order) throw new NotFoundException("Order not found");
+      amount = order.amount;
     }
     else if(compareStrings(resources, "subscription")){
       sub = await Subscription.findOne(filter)
-      if(!sub) throw new NotFoundException("Subcription not found")
+      if(!sub) throw new NotFoundException("Subcription not found");
+      amount = sub.amount;
     }
     else {
       throw new NotFoundException("Resource not found/supported")
@@ -64,7 +69,7 @@ class Controller {
     }
     
     return executePayment(
-      tx.amount, 
+      amount, 
       req.query?.PayerID, 
       req.query.paymentId,
       async (err, result) => {
