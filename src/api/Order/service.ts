@@ -12,7 +12,7 @@ import Review from "../../model/review";
 import { Response} from "express"
 import { createPayment } from "../../service/paypal";
 import { StatusCodes } from "http-status-codes";
-import User from "../../model/user";
+import User, { IUser } from "../../model/user";
 import History from "../../model/history";
 
 class Service {
@@ -48,7 +48,7 @@ class Service {
     if(!order) throw new NotFoundException("Order not found ");
 
     const newOrder = new Order({
-      user, service: order.service,
+      user, service: order.service || "home",
       config: order.config,
       images: order.images,
       paid: false,
@@ -76,10 +76,10 @@ class Service {
     }
 
     const ids = payload.cleaners.concat(order.cleaners.map(c => c.user.toString()))
-    const cleaners = await Cleaner.find({ user: ids })
+    const cleaners = await Cleaner.find({ user: ids }).populate("first_name last_name avatar")
     let data = []
     if(cleaners.length > 0){
-      data = this.selectLeader(cleaners)
+      data = this.selectLeader(cleaners as any)
       await order.updateOne({ cleaners: data } )
     }
 
@@ -156,18 +156,26 @@ class Service {
   }
 
   async getOrders(user: string){
-    const data = await Order.paginate({ user })
+    const data = await Order.paginate(
+      { user }, {sort: {created_at: -1}}
+    )
     return {message: "Orders retreved successfully", data}
   }
 
   async getOrder(id: string, user: string){
-    let data = await Order.findById(id)
-    if(!data) throw new NotFoundException("Order not found");
-    if(data.user.toString() !== user && data.cleaners.every(c => c.user !== user)){
-      throw new UnauthorizedException("Order not found")
-    }
+    try{
+      let data = await Order.findById(id)
+      if(!data) throw new NotFoundException("Order not found");
+      if(data.user.toString() !== user && data.cleaners.every(c => c.user !== user)){
+        throw new UnauthorizedException("Order not found")
+      }
 
-    return {message: "Order retreved successfully", data }
+      return {message: "Order retreved successfully", data }
+    }catch(err){
+      console.log(err)
+      return null
+    }
+    
   }
 
   async cancel(_id: string, user: string){
@@ -233,7 +241,7 @@ class Service {
      */
   }
 
-  private selectLeader(users: ICleaner[]){
+  private selectLeader(users: (ICleaner&{user: IUser})[]){
     let highest = -Infinity;
     let leader = null;
     
@@ -245,7 +253,9 @@ class Service {
     });
 
     return users.map(user => ({
-      user: user.user,
+      name: user.user?.first_name + " " + user.user?.last_name,
+      avatar: user.user?.avatar || null,
+      user: user.user?._id,
       leader: user.user == leader
     }));
   }

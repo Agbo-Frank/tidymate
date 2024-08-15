@@ -3,6 +3,8 @@ import mongoosePaginate from 'mongoose-paginate-v2';
 
 interface IOrderCleaner {
   user: string | typeof Types.ObjectId
+  name: string
+  avatar: string
   accepted: boolean
   leader: boolean
 }
@@ -43,6 +45,8 @@ const orderCleaner = new Schema<IOrderCleaner>({
     type: Types.ObjectId,
     ref: "user"
   },
+  name: String,
+  avatar: String,
   accepted: {
     type: Boolean,
     default: false
