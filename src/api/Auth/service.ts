@@ -19,8 +19,20 @@ class Service {
     if(!is_match) throw new BadRequestException(`Incorrect password`);
   
     const token = jwt.create({roles: user.roles, id: user?.id})
+    const data = { 
+      token, 
+      user, 
+      kyc_required: false,
+      role: "homeowner" 
+    }
 
-    return { message: "User login successful", data: { token, user } }
+    if(!isEmpty(user.cleaner)){
+      const cleaner = await Cleaner.findById(user.cleaner)
+      data.role = 'cleaner'
+      data.kyc_required = cleaner.docs.length < 4 || cleaner.docs.some(d => !d.verified)
+    }
+
+    return { message: "User login successful", data }
   }
 
   async register(payload: IRegister){

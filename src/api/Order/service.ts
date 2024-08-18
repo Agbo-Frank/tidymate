@@ -145,7 +145,7 @@ class Service {
         type: "charge"
       })
 
-      return responsHandler(res, "Payment completed", StatusCodes.OK, tx)
+      return responsHandler(res, "Payment completed", StatusCodes.CREATED, tx)
     }
 
     if(compareStrings(payload.method, "card")){

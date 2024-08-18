@@ -66,10 +66,10 @@ class Service {
 
   withdraw(){}
 
-  async transactions(user: string, pagination: IPagination){
+  async transactions(user: string, {limit, page}: IPagination){
     const data = await Transaction.paginate(
       { user }, 
-      {...pagination, sort: { updated_at: "desc" }}
+      { page, limit , sort: { updated_at: "desc" }}
     )
 
     return { message: "Transaction retrieve successfully", data }
