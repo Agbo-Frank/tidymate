@@ -3,6 +3,7 @@ import { Schema, Types, model } from "mongoose"
 export interface IRequest {
   user: string | typeof Types.ObjectId
   balance: number
+  amount: number
   status: string
   phone_number: string
   location: {
@@ -19,7 +20,14 @@ const request = new Schema<IRequest>({
     type: Types.ObjectId,
     ref: "user"
   },
-  balance: Number,
+  balance: {
+    type: Number,
+    default: 0
+  },
+  amount: {
+    type: Number,
+    default: 100
+  },
   status: {
     type: String,
     default: "pending",

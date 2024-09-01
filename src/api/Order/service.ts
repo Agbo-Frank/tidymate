@@ -110,7 +110,7 @@ class Service {
     }
 
     const ids = payload.cleaners.concat(order.cleaners.map(c => c.user.toString()))
-    const cleaners = await Cleaner.find({ user: ids }).populate("first_name last_name avatar")
+    const cleaners = await Cleaner.find({ user: ids }).populate("user", "first_name last_name avatar")
     let data = []
     if(cleaners.length > 0){
       data = this.selectLeader(cleaners as any)

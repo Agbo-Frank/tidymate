@@ -12,6 +12,7 @@ export interface ICleaner {
   code: string
   // TODO: add is active
   earnings: number
+  available: boolean
   verified: boolean
   completed_order: number
   rating: {  num_of_rating: number; value_of_rating: number }
@@ -20,6 +21,7 @@ export interface ICleaner {
     type: string
     coordinates: Number []
   }
+  isverified: () => boolean
   docs: IDoc[]
 }
 
@@ -29,6 +31,10 @@ const cleaner = new Schema<ICleaner>({
     ref: "User"
   },
   code: String,
+  available: {
+    type: Boolean,
+    default: true
+  },
   earnings: { type: Number, default: 0 },
   completed_order: { type: Number, default: 0 },
   rating: {
@@ -52,6 +58,11 @@ const cleaner = new Schema<ICleaner>({
   timestamps: {
     createdAt: "created_at",
     updatedAt: "updated_at"
+  },
+  methods: {
+    isverified(){
+      return this.docs.length > 4 && this.docs.every(d => d.verified)
+    }
   },
   virtuals: {
     avg_rating: {

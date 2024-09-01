@@ -43,7 +43,7 @@ export interface IOrder {
 
 const orderCleaner = new Schema<IOrderCleaner>({
   user: {
-    type: Types.ObjectId,
+    type: String,
     ref: "user"
   },
   name: String,

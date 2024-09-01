@@ -21,15 +21,17 @@ class Service {
     const token = jwt.create({roles: user.roles, id: user?.id})
     const data = { 
       token, 
-      user, 
-      kyc_required: false,
+      user: {
+        ...user.toJSON(),
+        kyc_required: false
+      }, 
       role: "homeowner" 
     }
 
     if(!isEmpty(user.cleaner)){
       const cleaner = await Cleaner.findById(user.cleaner)
       data.role = 'cleaner'
-      data.kyc_required = cleaner.docs.length < 4 || cleaner.docs.some(d => !d.verified)
+      data.user.kyc_required = cleaner.isverified()
     }
 
     return { message: "User login successful", data }

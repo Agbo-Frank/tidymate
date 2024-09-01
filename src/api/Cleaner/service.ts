@@ -2,7 +2,7 @@ import Cleaner from "../../model/cleaner"
 import Order from "../../model/order"
 import { compareStrings, isEmpty } from "../../utility/helpers"
 import { BadRequestException, NotFoundException, UnauthorizedException } from "../../utility/service-error"
-import { FilterQuery } from "mongoose"
+import { FilterQuery, isValidObjectId } from "mongoose"
 import { IUploaDocs, ISetLocation, ICreateRequest } from "./interface"
 import cloudinary from "../../service/cloudinary"
 import Request from "../../model/request"
@@ -11,9 +11,11 @@ import dayjs from "dayjs"
 class Service {
 
   async orders(user: string){
-    const data = await Order.find({ cleaners: { $elemMatch: { user } } })
-
-    return {message: "Orders retreved successfully", data}
+    const data = await Order.paginate(
+      { "cleaners": { $elemMatch: { user } } },
+      {sort: {created_at: -1}}
+    )
+    return { message: "Orders retreved successfully", data }
   }
 
   async cancel(id: string, user: string){
@@ -83,6 +85,13 @@ class Service {
   }
 
   async requestKit(payload: ICreateRequest, user: string){
+    const cleaner = await Cleaner.findOne({ user })
+    if(!cleaner) throw new NotFoundException("Cleaner not found");
+    if(!cleaner.isverified()) {
+      throw new NotFoundException("Cleaner's kyc hasn't being verified, try again later");
+    }
+    // const req = await Request.findOne({ user })
+    // if(req || req.balance)
     const data = await Request.create({
       user,
       phone_number: payload.phone_number,
@@ -95,7 +104,7 @@ class Service {
       }
     })
 
-    return { message: "Request recieved successfully", data }
+    return { message: "Request recieved successfully", data: null }
   }
 
   paymentMethod(){}
@@ -112,13 +121,14 @@ class Service {
   async getCleaners(query){
     const filters = this.filters(query)
 
+    // TODO: ensure to only return verified cleaners 
     const data = await Cleaner.find({ 
       $and: filters.length > 0 ? filters : [{}]
-    }).populate("user", "-password")
+    }).populate("user", "-password").select("-docs")
 
     return {
       message: "Cleaners retrieved successfully",
-      data
+      data: data?.filter(i => !isEmpty(i.user))
     }
   }
 
