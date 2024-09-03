@@ -18,7 +18,7 @@ export interface IRequest {
 const request = new Schema<IRequest>({
   user: {
     type: Types.ObjectId,
-    ref: "user"
+    ref: "User"
   },
   balance: {
     type: Number,

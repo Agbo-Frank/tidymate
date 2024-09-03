@@ -11,11 +11,11 @@ export interface IReview {
 const review = new Schema<IReview>({
   user: {
     type: Types.ObjectId,
-    ref: "user"
+    ref: "User"
   },
   cleaner: {
     type: Types.ObjectId,
-    ref: "user"
+    ref: "User"
   },
   order: {
     type: Types.ObjectId,

@@ -11,11 +11,11 @@ export interface IReferral {
 const referral = new Schema<IReferral>({
   user: {
     type: Types.ObjectId,
-    ref: "user"
+    ref: "User"
   },
   referee: {
     type: Types.ObjectId,
-    ref: "user"
+    ref: "User"
   },
   reward: {
     type: Number,

@@ -44,7 +44,7 @@ export interface IOrder {
 const orderCleaner = new Schema<IOrderCleaner>({
   user: {
     type: String,
-    ref: "user"
+    ref: "User"
   },
   name: String,
   avatar: String,
@@ -63,7 +63,7 @@ const order = new Schema<IOrder>({
   note: String,
   user: {
     type: Types.ObjectId,
-    ref: "user"
+    ref: "User"
   },
   config: {
     bedroom: { type: Number, default: 0 },
@@ -86,7 +86,7 @@ const order = new Schema<IOrder>({
   status: {
     type: String,
     default: "pending"
-  }, // pending
+  },
   cleaners: [ orderCleaner ],
   payment_method: String,
   location: {

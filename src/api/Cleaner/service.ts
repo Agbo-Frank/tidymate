@@ -11,11 +11,19 @@ import dayjs from "dayjs"
 class Service {
 
   async orders(user: string){
-    const data = await Order.paginate(
-      { "cleaners": { $elemMatch: { user } } },
-      {sort: {created_at: -1}}
-    )
-    return { message: "Orders retreved successfully", data }
+    try {
+      const data = await Order.paginate(
+        { "cleaners": { $elemMatch: { user } } },
+        {
+          sort: {created_at: -1},
+          populate: { path: "user", select: "first_name last_name phone_number avatar" }
+        }
+      )
+      return { message: "Orders retreved successfully", data }
+    } catch (error) {
+        console.log(error)
+        throw error
+    }
   }
 
   async cancel(id: string, user: string){
