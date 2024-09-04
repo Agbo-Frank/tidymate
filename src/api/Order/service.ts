@@ -19,11 +19,12 @@ class Service {
   async create(payload: ICreateOrder, user: string){
     const { service, note, num_cleaners = 1, start_date, coordinates, config } = payload
 
-    const amount = this.calculateOrderAmount(config.bedroom)
+    const { amount, duration } = this.calculateOrderAmount(config.bedroom, num_cleaners)
 
     const order = new Order({
       service, note, amount,
       user, num_cleaners,
+      estimated_duration: duration,
       location: { coordinates }, config,
       scheduled_at: dayjs.unix(start_date).toISOString()
     })
@@ -51,12 +52,10 @@ class Service {
     if(!order) throw new NotFoundException('Order not found');
 
     if(!isEmpty(config)){
-      update_payload.amount = this.calculateOrderAmount(config.bedroom)
+      const { amount, duration } = this.calculateOrderAmount(config.bedroom, order.num_cleaners)
+      update_payload.amount = amount
+      update_payload.estimated_duration = duration
       update_payload.config = config
-    }
-
-    if(!isEmpty(config)){
-      update_payload.amount = this.calculateOrderAmount(config.bedroom)
     }
 
     if(!isEmpty(coordinates)){
@@ -295,13 +294,16 @@ class Service {
     }));
   }
   
-  private calculateOrderAmount(num_of_bedrooms){
+  private calculateOrderAmount(num_of_bedrooms, num_cleaners){
     const baserate = 30;
-    const ave_hrs_per_room = 1;
+    const ave_hr_per_room = 1;
 
-    const totalHours = num_of_bedrooms * ave_hrs_per_room;
+    const duration = num_of_bedrooms * ave_hr_per_room;
 
-    return totalHours * baserate;
+    return {
+      duration: duration / num_cleaners, 
+      amount: duration * baserate
+    }
   }
 }
 

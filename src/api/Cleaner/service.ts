@@ -48,11 +48,14 @@ class Service {
       throw new UnauthorizedException("Only Assigned team lead can start or commerce cleaning")
     }
 
-    order.started_at = dayjs().toISOString()
-    order.status = "ongoing"
-    await order.save()
+    const data = await Order.findByIdAndUpdate(
+      id, 
+      { started_at: dayjs().toISOString(), status: "ongoing" },
+      { new: true }
+    )
+      .populate({ path: "user", select: "first_name last_name phone_number avatar" })
 
-    return { message: "Order commerced successfully", data: null}
+    return { message: "Order commerced successfully", data }
   }
 
   async end(id: string, user: string){
@@ -71,12 +74,13 @@ class Service {
       throw new UnauthorizedException("You can't end this order till it's exceeds the estimated duration")
     }
 
-    order.ended_at = dayjs().toISOString()
-    order.actual_duration = actual_duration
-    order.status = "completed"
-    await order.save()
+    const data = await Order.findByIdAndUpdate(
+      id, 
+      { ended_at: dayjs().toISOString(), actual_duration, status: "completed"},
+      { new: true }
+    )
 
-    return { message: "Order ended successfully", data: null}
+    return { message: "Order ended successfully", data }
   }
 
   async accept(id: string, user: string){
