@@ -22,8 +22,6 @@ class Service {
     const user = await User.findById(id).select("-password")
     if(!user) throw new BadRequestException("user not found");
 
-    //TODO: Add the subscription status
-
     return { message: "User profile retrieved successfully", data: user}
   }
 
@@ -85,6 +83,7 @@ class Service {
     const sub = new Subscription({
       amount: 10,
       currency: "usd", 
+      user: id,
       payment_method: method, 
       due_at: dayjs().add(30, "days")
     })
@@ -105,16 +104,14 @@ class Service {
         amount: sub.amount,
         type: "charge"
       })
-
+      await sub.save()
       return responsHandler(
         res, 
         "Subscripton payment completed", 
         StatusCodes.OK, 
         null
       )
-    }
-
-    else if(compareStrings(method, "card")){
+    } else if(compareStrings(method, "card")){
       const card = await Card.findById(payload.card)
       if(!card) throw new NotFoundException("card not found");
       
@@ -133,8 +130,7 @@ class Service {
         StatusCodes.CREATED, 
         null
       )
-    }
-    else if(compareStrings(payload.method, "paypal")){
+    } else if(compareStrings(payload.method, "paypal")){
       createSubscription(10, async (err, result) => {
         if(err){
           throw new ServiceError(err.message, err.httpStatusCode, err.response.details)
@@ -151,12 +147,24 @@ class Service {
           )
         }
       })
-    }
-    else {
+    } else {
       throw new BadRequestException("Payment method not supported")
     }
     
     await sub.save()
+  }
+
+  async cancelSub(payload, user: string){
+    await Subscription.updateMany(
+      { user, status: "active" }, 
+      { note: payload?.note, status: "cancelled" }
+    )
+    return { message: "Subscription cancelled successfully", data: null}
+  }
+
+  async subStatus(user: string){
+    const data = await Subscription.findOne({ user })
+    return { message: "Subscription status retrieved successfully", data}
   }
 
   async notifications(id: string, pagination: IPagination){

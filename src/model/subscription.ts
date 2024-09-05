@@ -5,8 +5,9 @@ export interface ISubscription {
   currency: string
   payment_method: string
   user: string
-  status: string 
+  status: string  //pending active cancelled
   due_at: string
+  note?: string
   card: string
   metadata: any
 }
@@ -16,6 +17,7 @@ const subscription = new Schema<ISubscription>({
   payment_method: String,
   currency: String,
   user: String,
+  note: String,
   status: {
     type: String,
     default: "pending"

@@ -32,6 +32,8 @@ class Service {
       const cleaner = await Cleaner.findById(user.cleaner)
       data.role = 'cleaner'
       data.user.kyc_required = cleaner.isverified()
+      //@ts-ignore
+      // data.user.cleaner = cleaner
     }
 
     return { message: "User login successful", data }

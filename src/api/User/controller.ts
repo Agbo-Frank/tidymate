@@ -48,6 +48,23 @@ class Controller {
     }
   }
 
+  async subStatus(req: any, res: Response, next: NextFunction){
+    try {
+      const { message, data } = await service.subStatus(req.user)
+      return responsHandler(res, message, StatusCodes.OK, data)
+    } catch (error) {
+      next(error)
+    }
+  }
+  async cancelSub(req: any, res: Response, next: NextFunction){
+    try {
+      const { message, data } = await service.cancelSub(req.body, req.user)
+      return responsHandler(res, message, StatusCodes.OK, data)
+    } catch (error) {
+      next(error)
+    }
+  }
+
   async notifications(req: any, res: Response, next: NextFunction){
     try {
       const { message, data } = await service.notifications(req.user, pagingParams(req))
