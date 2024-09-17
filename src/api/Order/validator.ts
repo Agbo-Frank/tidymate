@@ -27,10 +27,8 @@ export default {
     body("start_date").notEmpty().withMessage("Start date is required").isNumeric().withMessage("start date must be a number in unix format"),
   ],
   review: [
-    body().isArray().withMessage("Invalid payload").notEmpty().withMessage("Please submit your review"),
-    body("*.order").notEmpty().withMessage("Order id is required").isMongoId().withMessage("Invalid order id"),
-    body("*.cleaner").notEmpty().withMessage("cleaner id is required").isMongoId().withMessage("Invalid cleaner id"),
-    body("*.rate").notEmpty().withMessage("Rate is required").isInt({min: 0, max: 5}).withMessage("The rating must be between the range of 1 and 5"),
-    body("*.comment").optional()
+    body("order").notEmpty().withMessage("Order id is required").isMongoId().withMessage("Invalid order id"),
+    body("rate").notEmpty().withMessage("Rate is required").isInt({min: 0, max: 5}).withMessage("The rating must be between the range of 1 and 5"),
+    body("comment").optional()
   ]
 }

@@ -109,6 +109,16 @@ class Controller {
     }
   }
 
+  async complete(req: any, res: Response, next: NextFunction){
+    try {
+      const { message, data } = await service.complete(req.params.id, req.user)
+      console.log(data, message)
+      return responsHandler(res, message, StatusCodes.OK, data)
+    } catch (error) {
+      next(error)
+    }
+  }
+
   async processPayment(req: any, res: Response, next: NextFunction){
     try {
       validateRequest(req)

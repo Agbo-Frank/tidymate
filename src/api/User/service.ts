@@ -25,21 +25,21 @@ class Service {
     return { message: "User profile retrieved successfully", data: user}
   }
 
-  async update(payload: Partial<IUser & { image: string }>, user_id: string){
+  async update(payload: Partial<IUser & { avatar: string }>, user_id: string){
     let user = await User.findById(user_id)
     if(!user) throw new BadRequestException("user not found");
 
-    if("image" in payload){
-      const result = await cloudinary.uploader.upload(payload.image, { folder: '/profile_pics' })
+    if("avatar" in payload){
+      const result = await cloudinary.uploader.upload(payload.avatar, { folder: '/profile_pics' })
       if(!result) throw new BadRequestException("Couldn't upload docs, please try again");
 
-      payload.image = result.secure_url
+      payload.avatar = result.secure_url
     }
 
     user = await User.findByIdAndUpdate(user_id, {
       first_name: payload?.first_name,
       last_name: payload?.last_name,
-      avatar: payload?.image || user.avatar,
+      avatar: payload?.avatar || user.avatar,
       phone_number: payload?.phone_number
     }, { new: true })
 

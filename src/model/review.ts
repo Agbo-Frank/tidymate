@@ -1,22 +1,12 @@
 import { Schema, Types, model } from "mongoose";
 
 export interface IReview {
-  user: string | typeof Types.ObjectId
-  cleaner: string | typeof Types.ObjectId
   order: string | typeof Types.ObjectId
   rate: number
   comment: string
 }
 
 const review = new Schema<IReview>({
-  user: {
-    type: Types.ObjectId,
-    ref: "User"
-  },
-  cleaner: {
-    type: Types.ObjectId,
-    ref: "User"
-  },
   order: {
     type: Types.ObjectId,
     ref: "order"

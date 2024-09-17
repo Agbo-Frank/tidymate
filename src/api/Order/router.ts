@@ -13,6 +13,7 @@ router.put("/orders/reorder", valid.reorder, cltr.reorder)
 router.put("/orders/tip", valid.tip, cltr.tip)
 router.post("/orders/review", valid.review, cltr.review)
 router.delete("/orders/cancel/:id", cltr.cancel)
+router.post("/orders/complete/:id", cltr.complete)
 router.post("/orders/pay", valid.processPayment, cltr.processPayment)
 
 export default router

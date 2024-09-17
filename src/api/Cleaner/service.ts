@@ -76,7 +76,7 @@ class Service {
 
     const data = await Order.findByIdAndUpdate(
       id, 
-      { ended_at: dayjs().toISOString(), actual_duration, status: "completed"},
+      { ended_at: dayjs().toISOString(), actual_duration, status: "ended"},
       { new: true }
     )
 

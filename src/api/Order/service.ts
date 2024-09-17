@@ -224,23 +224,19 @@ class Service {
     }
   }
 
-  async review(payload: IReview[], user: string){
-    if(payload.length === 0){
-      throw new BadRequestException("Review can't be empty")
-    }
-    const reviews = []
-    for (let i = 0; i < payload.length; i++) {
-      const review = payload[i]
-      await Cleaner.updateOne(
-        { user: review.cleaner },
-        {$inc: {
-          "rating.num_of_rating": 1,
-          "rating.value_of_rating": review.rate
-        }}
-      )
-      reviews.push({...review, user})
-    }
-    const data = await Review.insertMany(reviews)
+  async review(payload: IReview, user: string){
+    const order = await Order.findById(payload.order).lean()
+    if(!order) throw new NotFoundException("Order not found ");
+
+    await Cleaner.updateMany(
+      { user: order.cleaners.map(c => c.user) },
+      { $inc: {
+        "rating.num_of_rating": 1,
+        "rating.value_of_rating": payload.rate
+      }}
+    )
+
+    const data = await Review.create(payload)
 
     return { message: "Thanks for your review", data }
   }
@@ -265,7 +261,13 @@ class Service {
     return { message: "Tip recieved successfully", data: null }
   }
 
-  complete(){}
+  async complete(id: string, user: string){
+    const order = await Order.findOne({ _id: id, user })
+    if(!order) throw new NotFoundException("Order not found");
+
+    await order.updateOne({status: "completed"})
+    return { message: "Order completed successfully", data: null }
+  }
   confirmDelivery(){
     /**
      * during confirmation ensure the user(homeowner) has completed payment

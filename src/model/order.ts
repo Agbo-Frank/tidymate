@@ -31,7 +31,7 @@ export interface IOrder {
   tip: number
   currency: string
   paid: boolean
-  status: string // pending cancelled ongoing completed
+  status: string // pending cancelled ongoing ended completed
   cleaners: IOrderCleaner[]
   payment_method: string,
   metadata: any
