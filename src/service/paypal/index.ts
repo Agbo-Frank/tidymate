@@ -9,7 +9,7 @@ paypal.configure({
 
 export default paypal
 
-export const callback_url = "https://3f2c-102-90-48-231.ngrok-free.app/callback/paypal"
+export const callback_url = "https://c209-102-90-66-90.ngrok-free.app/callback/paypal"
 export * from "./create-payment"
 export * from "./create-subscription"
 export * from "./execute-payment"

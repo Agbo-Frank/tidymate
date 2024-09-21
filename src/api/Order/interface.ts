@@ -10,7 +10,8 @@ export interface ICreateOrder {
 export interface IProcessPayment {
   order: string
   method: "wallet" | "card" | "paypal"
-  card: string
+  card?: string
+  callback_url?: string
 }
 
 export interface IAddCleaner {

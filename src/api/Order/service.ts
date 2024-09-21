@@ -10,7 +10,7 @@ import Transaction from "../../model/transaction";
 import Cleaner, { ICleaner } from "../../model/cleaner";
 import Review from "../../model/review";
 import { Response} from "express"
-import { createPayment } from "../../service/paypal";
+import { createPayment } from "../../service/paypalv2";
 import { StatusCodes } from "http-status-codes";
 import User, { IUser } from "../../model/user";
 import History from "../../model/history";
@@ -119,9 +119,11 @@ class Service {
     return { message: "Cleaners added successfully", data }
   }
 
-  async processPayment(res: Response, payload: IProcessPayment, user_id: string){
+  async processPayment(payload: IProcessPayment, user_id: string){
     const order = await Order.findById(payload.order)
     if(!order) throw new NotFoundException("Order not found");
+
+    let data = null
 
     if(compareStrings(payload.method, "wallet")){
       const user = await User.findById(user_id)
@@ -130,12 +132,7 @@ class Service {
       }
       user.balance = numeral(user.balance).subtract(order.amount).value()
       await user.save()
-      
-      order.paid = true
 
-      await user.save()
-      await order.save()
-      
       const tx = await Transaction.create({
         user: user_id,
         status: "successful",
@@ -144,7 +141,10 @@ class Service {
         type: "charge"
       })
 
-      return responsHandler(res, "Payment completed", StatusCodes.CREATED, tx)
+      order.payment_ref = tx?.id
+      order.payment_method = "wallet"
+      order.paid = true
+      await order.save()
     }
 
     if(compareStrings(payload.method, "card")){
@@ -156,42 +156,39 @@ class Service {
         payment_method: card.reference,
         metadata: { order: order.id }
       })
-      order.metadata = { payment: result.id }
+
+      order.payment_ref = result?.id
+      order.payment_method = "card"
       await order.save()
       //TODO: handle the webhook
-
-      return responsHandler(
-        res, 
-        "Processing payment...", 
-        StatusCodes.CREATED, 
-        null
-      )
     }
 
     if(compareStrings(payload.method, "paypal")){
-      createPayment(order.amount, "Order payment", "order", async (err, result) => {
-        if(err){
-          throw new ServiceError(err.message, err.httpStatusCode, err.response.details)
-        }
-        else {
-          order.metadata = { payment: result.id }
-          order.payment_method = "paypal"
-          await order.save()
-
-          return responsHandler(
-            res, 
-            "Processing payment...", 
-            StatusCodes.CREATED, 
-            { link: result.link, id: result.id }
-          )
-        }
+      const result = await createPayment({
+        amount: order.amount, 
+        reference: `ORD-${order.id.slice(-8)}`,
+        description: "Order payment",
+        callback_url: payload?.callback_url
       })
+      
+      const link = result.links.find(l => compareStrings(l.rel, "payer-action"))
+      data = link ? { link: link?.href } : null;
+
+      order.payment_ref = result?.id
+      order.payment_method = "paypal"
+      await order.save()
     }
+
+    return { message: "Payment initaited successfully", data}
   }
 
-  async getOrders(user: string){
+  async getOrders(payload, user: string){
+    const filters: any[] = [{ user }]
+    if("status" in payload) {
+      filters.push({status: payload.status})
+    }
     const data = await Order.paginate(
-      { user }, {sort: {created_at: -1}}
+      { $and: filters }, {sort: {created_at: -1}}
     )
     return {message: "Orders retreved successfully", data}
   }
@@ -265,16 +262,15 @@ class Service {
     const order = await Order.findOne({ _id: id, user })
     if(!order) throw new NotFoundException("Order not found");
 
-    await order.updateOne({status: "completed"})
-    return { message: "Order completed successfully", data: null }
-  }
-  confirmDelivery(){
     /**
      * during confirmation ensure the user(homeowner) has completed payment
      * create a transaction and with a type commission and status pending
      * add tip if there's any
      * 
      */
+
+    await order.updateOne({status: "completed"})
+    return { message: "Order completed successfully", data: null }
   }
 
   private selectLeader(users: (ICleaner&{user: IUser})[]){
@@ -307,6 +303,8 @@ class Service {
       amount: duration * baserate
     }
   }
+
+
 }
 
 export default new Service()

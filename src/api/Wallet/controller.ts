@@ -6,7 +6,8 @@ import { NextFunction, Response, Request } from "express"
 class Controller {
   async deposit(req: any, res: Response, next: NextFunction) {
     try {
-      return await service.deposit(res, req.body, req.user)
+      const { message, data } = await service.deposit(req.body, req.user)
+      responsHandler(res, message, StatusCodes.CREATED, data)
     } catch (error) {
       next(error)
     }

@@ -81,7 +81,7 @@ class Controller {
 
   async getOrders(req: any, res: Response, next: NextFunction){
     try {
-      const { message, data } = await service.getOrders(req.user)
+      const { message, data } = await service.getOrders(req.query, req.user)
 
       return responsHandler(res, message, StatusCodes.OK, data)
     } catch (error) {
@@ -112,7 +112,7 @@ class Controller {
   async complete(req: any, res: Response, next: NextFunction){
     try {
       const { message, data } = await service.complete(req.params.id, req.user)
-      console.log(data, message)
+
       return responsHandler(res, message, StatusCodes.OK, data)
     } catch (error) {
       next(error)
@@ -123,7 +123,8 @@ class Controller {
     try {
       validateRequest(req)
       
-      return service.processPayment(res, req.body, req.user)
+      const { message, data } = await service.processPayment(req.body, req.user)
+      return responsHandler(res, message, StatusCodes.CREATED, data)
     } catch (error) {
       next(error)
     }

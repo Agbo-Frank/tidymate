@@ -8,16 +8,21 @@ export interface ITransaction {
   payment_method: string
   user: string
   narration: string
+  payment_ref: string
   metadata: any
 }
 
 const transaction = new Schema<ITransaction>({
   amount: Number,
-  status: String,
+  status: {
+    type: String,
+    default: "pending"
+  },
   type: String,
   user: String,
   narration: String,
   payment_method: String,
+  payment_ref: String,
   metadata: Schema.Types.Mixed
 }, {
   timestamps: {

@@ -1,9 +1,9 @@
 import Card from "../../model/cards";
 import { Response} from "express"
 import Transaction from "../../model/transaction";
-import { createPayment } from "../../service/paypal";
+import { createPayment } from "../../service/paypalv2";
 import { chargeCard } from "../../service/stripe/charge-card";
-import { compareStrings, responsHandler } from "../../utility/helpers";
+import { compareStrings, randAlphaNum, responsHandler } from "../../utility/helpers";
 import { IPagination } from "../../utility/interface";
 import { BadRequestException, NotFoundException, ServiceError } from "../../utility/service-error";
 import { IDeposit } from "./interface";
@@ -13,12 +13,12 @@ import User from "../../model/user";
 class Service {
 
   //@ts-ignore
-  async deposit(res: Response, payload: IDeposit, user_id: string){
+  async deposit(payload: IDeposit, user_id: string){
     const { amount, method } = payload
 
     const user = await User.findById(user_id)
     if(!user) throw new NotFoundException("User not found");
-
+    let data = null
     const tx = new Transaction({
       amount, type: "funding",
       user: user.id,
@@ -34,34 +34,24 @@ class Service {
         payment_method: card.reference,
         metadata: { tx: tx.id }
       })
-
-      tx.metadata = { payment: result.id }
-      await tx.save()
-
-      return responsHandler(res, "Deposit initiated successfully", StatusCodes.CREATED, tx.metadata)
+      tx.payment_ref = result?.id
       //TODO: handle the webhook
-    }
-    else if(compareStrings(method, "paypal")){
-      createPayment(amount, "Tidymate Wallet Funding", "wallet", async (err, result) => {
-        if(err){
-          throw new ServiceError(err.message, err.httpStatusCode, err.response.details)
-        }
-        else {
-          tx.metadata = { payment: result?.id }
-          await tx.save()
-
-          return responsHandler(
-            res, 
-            "Deposit initiated successfully", 
-            StatusCodes.CREATED, 
-            { link: result.link, id: result.id }
-          )
-        }
+    } else if(compareStrings(method, "paypal")){
+      const result = await createPayment({
+        amount, reference: `WAL-${tx.id.slice(-8)}`,
+        description: "Tidymate Wallet Funding",
+        callback_url: payload?.callback_url
       })
-    }
-    else {
+      
+      const link = result.links.find(l => compareStrings(l.rel, "payer-action"))
+      tx.payment_ref = result?.id
+      data = link ? { link: link?.href } : null;
+    } else {
       throw new BadRequestException("Payment method not supported")
     }
+
+    await tx.save()
+    return { message: "Deposit initiated successfully", data }
   }
 
   withdraw(){}
