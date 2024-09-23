@@ -17,7 +17,7 @@ export default {
   processPayment: [
     body("order").notEmpty().withMessage("Order id is required").isMongoId().withMessage("Invalid order id"),
     body("method").notEmpty().withMessage("Payment method is required").isIn(["wallet", "card", "paypal"]).withMessage("Invalid payment method"),
-    body("callback_url").if(body("method").equals("paypal")).notEmpty().withMessage("Callback url is required").isURL().withMessage("Must be a valid URL"),
+    body("callback_url").if(body("method").equals("paypal")).notEmpty().withMessage("Callback url is required"),//.isURL().withMessage("Must be a valid URL"),
     body("card").if(body("method").equals("card")).notEmpty().withMessage("Card is required").isMongoId().withMessage("Invalid card id") 
   ],
   tip: [

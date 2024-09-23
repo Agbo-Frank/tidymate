@@ -190,7 +190,8 @@ class Service {
     const data = await Order.paginate(
       { $and: filters }, {sort: {created_at: -1}}
     )
-    return {message: "Orders retreved successfully", data}
+    console.log(data)
+    return { message: "Orders retreved successfully", data}
   }
 
   async getOrder(id: string, user: string){

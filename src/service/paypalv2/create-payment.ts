@@ -5,12 +5,14 @@ import url from "url"
 
 export async function createPayment({ reference, amount, description, callback_url }){
   try {
-    callback_url = new URL(callback_url)
     const _url = (status) => {
-      const params = new URLSearchParams(callback_url.search)
+      const [url, search] = callback_url.split("?")
+      const params = new URLSearchParams(search)
       params.append("status", status)
-      return url.resolve(callback_url.href, params.toString())
+      return url + "?" + params.toString()
     }
+
+    console.log(_url("success"))
     const payload =  {
       "intent": "CAPTURE", 
       "purchase_units": [ 

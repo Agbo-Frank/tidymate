@@ -14,6 +14,7 @@ export default function guard(req: any, _: Response, next: NextFunction){
     next();
   }
   catch(error){
+    console.log(error)
     next(error);
   }
 }
