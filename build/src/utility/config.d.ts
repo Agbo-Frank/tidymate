@@ -1,0 +1,16 @@
+import 'dotenv/config';
+export declare const NODE_ENV: string;
+export declare const PORT: string;
+export declare const JWT_SECRET_KEY: string;
+export declare const MONGODB_URL: string;
+export declare const STRIPE_APIKEY: string;
+export declare const MAIL_HOST: string;
+export declare const MAIL_PORT: string;
+export declare const MAIL_USER: string;
+export declare const MAIL_PASS: string;
+export declare const CLOUDINARY_NAME: string;
+export declare const CLOUDINARY_API_KEY: string;
+export declare const CLOUDINARY_API_SECRET: string;
+export declare const PAYPAL_CLIENT_ID: string;
+export declare const PAYPAL_CLIENT_SECRET: string;
+export declare const GOOGLE_API_KEY: string;

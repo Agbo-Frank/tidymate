@@ -1,0 +1,1 @@
+{"version":3,"file":"routes.js","sourceRoot":"","sources":["../../../../src/api/webhook/routes.ts"],"names":[],"mappings":";;;;;AAAA,qCAAiC;AACjC,8DAA+B;AAE/B,MAAM,MAAM,GAAG,IAAA,gBAAM,GAAE,CAAA;AAEvB,MAAM,CAAC,GAAG,CAAC,qCAAqC,EAAE,oBAAI,CAAC,MAAM,CAAC,CAAA;AAC9D,MAAM,CAAC,IAAI,CAAC,iBAAiB,EAAE,oBAAI,CAAC,MAAM,CAAC,CAAA;AAE3C,kBAAe,MAAM,CAAA"}
