@@ -96,27 +96,6 @@ class Service {
     }
   }
 
-  async addCleaners(payload: IAddCleaner, user: string) {
-    const order = await Order.findOne({ user, _id: payload.order })
-    if(!order){
-      throw new NotFoundException("Order not found")
-    } 
-
-    if(!compareStrings(order.status, "pending")){
-      throw new NotFoundException(`This order has been ${order.status}`)
-    }
-
-    const ids = payload.cleaners.concat(order.cleaners.map(c => c.user.toString()))
-    const cleaners = await Cleaner.find({ user: ids }).populate("user", "first_name last_name avatar")
-    let data = []
-    if(cleaners.length > 0){
-      data = this.selectLeader(cleaners as any)
-      await order.updateOne({ cleaners: data } )
-    }
-
-    return { message: "Cleaners added successfully", data }
-  }
-
   async processPayment(payload: IProcessPayment, user_id: string){
     const order = await Order.findById(payload.order)
     if(!order) throw new NotFoundException("Order not found");
@@ -278,25 +257,6 @@ class Service {
 
     await order.updateOne({status: "completed"})
     return { message: "Order completed successfully", data: null }
-  }
-
-  private selectLeader(users: (ICleaner & {user: IUser})[]){
-    let highest = -Infinity;
-    let leader = null;
-    
-    users.forEach(user => {
-      if (user.avg_rating > highest) {
-        highest = user.avg_rating;
-        leader = user.user;
-      }
-    });
-
-    return users.map(user => ({
-      name: user.user?.first_name + " " + user.user?.last_name,
-      avatar: user.user?.avatar || null,
-      user: user.user?._id,
-      leader: user.user == leader
-    }));
   }
   
   private calculateOrderAmount(num_of_bedrooms, num_cleaners){

@@ -5,7 +5,6 @@ interface IOrderCleaner {
   user: string | typeof Types.ObjectId
   name: string
   avatar: string
-  accepted: boolean
   leader: boolean
 }
 
@@ -50,10 +49,6 @@ const orderCleaner = new Schema<IOrderCleaner>({
   },
   name: String,
   avatar: String,
-  accepted: {
-    type: Boolean,
-    default: false
-  },
   leader: {
     type: Boolean,
     default: false

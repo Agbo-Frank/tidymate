@@ -1,4 +1,4 @@
-import Cleaner from "../../model/cleaner"
+import Cleaner, { ICleaner } from "../../model/cleaner"
 import Order from "../../model/order"
 import { compareStrings, isEmpty } from "../../utility/helpers"
 import { BadRequestException, NotFoundException, UnauthorizedException } from "../../utility/service-error"
@@ -7,7 +7,7 @@ import { IUploaDocs, ISetLocation, ICreateRequest } from "./interface"
 import cloudinary from "../../service/cloudinary"
 import Request from "../../model/request"
 import dayjs from "dayjs"
-import User from "../../model/user"
+import User, { IUser } from "../../model/user"
 
 class Service {
 
@@ -104,7 +104,6 @@ class Service {
   async accept(id: string, user_id: string){
     const order = await Order.findById(id)
     if(!order) throw new NotFoundException("Order not found");
-
     if(!compareStrings(order.status, "pending")){
       throw new BadRequestException(`This order has been ${order.status}`)
     }
@@ -118,19 +117,19 @@ class Service {
     }
 
     const user = await User.findById(user_id)
-    if(!user || isEmpty(user.cleaner)) throw new NotFoundException("User not found");
+    if(!user) throw new NotFoundException("User not found");
+    if(isEmpty(user.cleaner)) throw new NotFoundException("User is not a registered cleaner");
 
-    await order.updateOne({
-      $addToSet: { cleaners: {
-        user: user.id,
-        avatar: user.avatar,
-        accept: true,
-        leader: false,
-        name: `${user.first_name} ${user.last_name}`
-      }}
-    })
+    const ids = order.cleaners.map(c => c.user.toString())
+    const cleaners = await Cleaner.find({ user: ids }).populate("user", "first_name last_name avatar")
+    let data = []
+    if(cleaners.length > 0){
+      data = this.selectLeader(cleaners as any)
+      console.log(data)
+      await order.updateOne({ cleaners: data } )
+    }
 
-    return { message: "Order accepted successfully", data: null}
+    return { message: "Order accepted successfully", data: null }
   }
 
   async decline(id: string, user: string){
@@ -198,7 +197,7 @@ class Service {
     }
   }
 
- async uploadDocs(payload: IUploaDocs, user: string){
+  async uploadDocs(payload: IUploaDocs, user: string){
     try {
       const { image, type } = payload
       const cleaner = await Cleaner.findOne({ user })
@@ -268,6 +267,25 @@ class Service {
     }
 
     return queries
+  }
+
+  private selectLeader(users: (ICleaner & { user: IUser })[]){
+    let highest = -Infinity;
+    let leader = null;
+    
+    users.forEach(user => {
+      if (user.avg_rating > highest) {
+        highest = user.avg_rating;
+        leader = user.user;
+      }
+    });
+
+    return users.map(user => ({
+      name: user.user?.first_name + " " + user.user?.last_name,
+      avatar: user.user?.avatar || null,
+      user: user.user?._id,
+      leader: user.user == leader
+    }));
   }
 }
 
