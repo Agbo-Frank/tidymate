@@ -121,6 +121,7 @@ class Service {
     if(isEmpty(user.cleaner)) throw new NotFoundException("User is not a registered cleaner");
 
     const ids = order.cleaners.map(c => c.user.toString())
+    ids.push(user_id)
     const cleaners = await Cleaner.find({ user: ids }).populate("user", "first_name last_name avatar")
     let data = []
     if(cleaners.length > 0){

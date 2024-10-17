@@ -164,6 +164,7 @@ class Service {
     if("status" in payload) {
       filters.push({ status: payload.status })
     }
+    
     const data = await Order.paginate(
       { $and: filters }, {sort: {created_at: -1}}
     )
