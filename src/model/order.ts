@@ -38,6 +38,7 @@ export interface IOrder {
   metadata: any
   location: {
     address: string,
+    type: string,
     coordinates: number[] //[lat, lon]
   }
 }
@@ -93,6 +94,7 @@ const order = new Schema<IOrder>({
   payment_method: String,
   location: {
     address: String,
+    type: { type: String, default: "Point"},
     coordinates: [ Number ]
   },
   metadata: Schema.Types.Mixed

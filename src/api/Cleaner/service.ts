@@ -2,11 +2,12 @@ import Cleaner from "../../model/cleaner"
 import Order from "../../model/order"
 import { compareStrings, isEmpty } from "../../utility/helpers"
 import { BadRequestException, NotFoundException, UnauthorizedException } from "../../utility/service-error"
-import { FilterQuery, isValidObjectId } from "mongoose"
+import { FilterQuery } from "mongoose"
 import { IUploaDocs, ISetLocation, ICreateRequest } from "./interface"
 import cloudinary from "../../service/cloudinary"
 import Request from "../../model/request"
 import dayjs from "dayjs"
+import User from "../../model/user"
 
 class Service {
 
@@ -21,8 +22,25 @@ class Service {
       )
       return { message: "Orders retreved successfully", data }
     } catch (error) {
-        console.log(error)
-        throw error
+      console.log(error)
+      throw error
+    }
+  }
+
+  async pendingOrders(){
+    try {
+      const data = await Order.paginate(
+        { status: "pending", paid: true },
+        { 
+          sort: { created_at: -1 },
+          populate: { path: "user", select: "first_name last_name phone_number avatar" }
+        }
+      )
+
+      return { message: "New orders retreved successfully", data }
+    } catch (error) {
+      console.log(error)
+      throw error
     }
   }
 
@@ -45,7 +63,7 @@ class Service {
 
     const cleaner = order.cleaners.find(c => c.user == user)
     if(!cleaner || !cleaner.leader){
-      throw new UnauthorizedException("Only Assigned team lead can start or commerce cleaning")
+      throw new BadRequestException("Only Assigned team lead can start or commerce cleaning")
     }
 
     const data = await Order.findByIdAndUpdate(
@@ -83,17 +101,53 @@ class Service {
     return { message: "Order ended successfully", data }
   }
 
-  async accept(id: string, user: string){
+  async accept(id: string, user_id: string){
     const order = await Order.findById(id)
     if(!order) throw new NotFoundException("Order not found");
 
-    const cleaner_order = order.cleaners.find(c => c.user == user)
-    if(!cleaner_order) throw new NotFoundException("Order not found or has been declined");
+    if(!compareStrings(order.status, "pending")){
+      throw new BadRequestException(`This order has been ${order.status}`)
+    }
 
-    cleaner_order.accepted = true
-    await order.save()
+    if(order.cleaners.some(c => c.user === user_id)){
+      throw new BadRequestException(`You've already accepted this order`)
+    }
+    
+    if( order.cleaners.length  >= order.num_cleaners){
+      throw new BadRequestException(`This order has exceded the maximum number of cleaners`)
+    }
+
+    const user = await User.findById(user_id)
+    if(!user || isEmpty(user.cleaner)) throw new NotFoundException("User not found");
+
+    await order.updateOne({
+      $addToSet: { cleaners: {
+        user: user.id,
+        avatar: user.avatar,
+        accept: true,
+        leader: false,
+        name: `${user.first_name} ${user.last_name}`
+      }}
+    })
 
     return { message: "Order accepted successfully", data: null}
+  }
+
+  async decline(id: string, user: string){
+    const order = await Order.findById(id)
+    if(!order) throw new NotFoundException("Order not found");
+
+    if(!compareStrings(order.status, "pending")){
+      //TODO: charge the user if the order is no longer pending and he has once accepted the order
+      // throw new BadRequestException(`This order has been ${order.status}`)
+    }
+
+    if(!order.cleaners.some(c => c.user === user)){
+      throw new BadRequestException(`You've not accepted this order`)
+    }
+
+    await order.updateOne({  $unset: { cleaners: { user } } })
+    return { message: "Order declined successfully", data: null}
   }
 
   async requestKit(payload: ICreateRequest, user: string){

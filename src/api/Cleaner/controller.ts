@@ -13,6 +13,15 @@ class Controller {
     }
   } 
 
+  async pendingOrders(req: any, res: Response, next: NextFunction) {
+    try {
+      const { message, data } = await service.pendingOrders()
+      return responsHandler(res, message, StatusCodes.OK, data)
+    } catch (error) {
+      next(error)
+    }
+  } 
+
   async profile(req: any, res: Response, next: NextFunction) {
     try {
       const { message, data } = await service.profile(req.user)
@@ -76,6 +85,16 @@ class Controller {
       next(error)
     }
   } 
+
+  async decline(req: any, res: Response, next: NextFunction) {
+    try {
+      const { message, data } = await service.decline(req.params.id, req.user)
+      return responsHandler(res, message, StatusCodes.OK, data)
+    } catch (error) {
+      next(error)
+    }
+  } 
+
   async cancel(req: any, res: Response, next: NextFunction) {
     try {
       const { message, data } = await service.cancel(req.params.id, req.user)

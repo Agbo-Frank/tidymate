@@ -1,17 +1,15 @@
 import dayjs from "dayjs";
 import Order from "../../model/order";
 import { IAddCleaner, ICreateOrder, IProcessPayment, IReOrder, IReview, ITip } from "./interface";
-import { BadRequestException, NotFoundException, ServiceError, UnauthorizedException } from "../../utility/service-error";
-import { compareStrings, geocoder, isEmpty, responsHandler } from "../../utility/helpers";
+import { BadRequestException, NotFoundException, UnauthorizedException } from "../../utility/service-error";
+import { compareStrings, geocoder, isEmpty } from "../../utility/helpers";
 import Card from "../../model/cards";
 import numeral from "numeral"
 import { chargeCard } from "../../service/stripe/charge-card";
 import Transaction from "../../model/transaction";
 import Cleaner, { ICleaner } from "../../model/cleaner";
 import Review from "../../model/review";
-import { Response} from "express"
 import { createPayment } from "../../service/paypalv2";
-import { StatusCodes } from "http-status-codes";
 import User, { IUser } from "../../model/user";
 import History from "../../model/history";
 
@@ -185,22 +183,30 @@ class Service {
   async getOrders(payload, user: string){
     const filters: any[] = [{ user }]
     if("status" in payload) {
-      filters.push({status: payload.status})
+      filters.push({ status: payload.status })
     }
     const data = await Order.paginate(
       { $and: filters }, {sort: {created_at: -1}}
     )
-    console.log(data)
+
     return { message: "Orders retreved successfully", data}
   }
 
   async getOrder(id: string, user: string){
     try{
-      let data = await Order.findById(id)
+      let data = (await Order.findById(id)).toObject()
+
       if(!data) throw new NotFoundException("Order not found");
-      if(data.user.toString() !== user && data.cleaners.every(c => c.user !== user)){
-        throw new UnauthorizedException("Order not found")
-      }
+
+      const cleaner_ids = data.cleaners.map(c => c.user)
+      const cleaners = await Cleaner.find({ user: cleaner_ids })
+ 
+      data.cleaners = data.cleaners.map(orderCleaner => {
+        const cleaner = cleaners.find(c => c.user.toString() === orderCleaner.user)
+
+        orderCleaner["avg_rating"] = cleaner.avg_rating 
+        return orderCleaner
+      })
 
       return {message: "Order retreved successfully", data }
     }catch(err){
@@ -274,7 +280,7 @@ class Service {
     return { message: "Order completed successfully", data: null }
   }
 
-  private selectLeader(users: (ICleaner&{user: IUser})[]){
+  private selectLeader(users: (ICleaner & {user: IUser})[]){
     let highest = -Infinity;
     let leader = null;
     

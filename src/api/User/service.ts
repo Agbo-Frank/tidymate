@@ -10,7 +10,7 @@ import Card from "../../model/cards";
 import { chargeCard } from "../../service/stripe/charge-card";
 import numeral from "numeral";
 import Transaction from "../../model/transaction";
-import { createPayment, createSubscription } from "../../service/paypal";
+import { createSubscription } from "../../service/paypal";
 import { Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import Notification from "../../model/notifications";
@@ -19,7 +19,7 @@ import cloudinary from "../../service/cloudinary";
 
 class Service {
   async profile(id: string){
-    const user = await User.findById(id).select("-password")
+    const user = await User.findById(id).select("-password").populate("cleaner", "-docs")
     if(!user) throw new BadRequestException("user not found");
 
     return { message: "User profile retrieved successfully", data: user}

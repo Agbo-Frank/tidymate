@@ -5,9 +5,11 @@ import valid from "./validator"
 const router = Router()
 
 router.get("/cleaners/orders", cltr.orders)
+router.get("/cleaners/pending/orders", cltr.pendingOrders)
 router.get("/cleaners/profile",  cltr.profile)
 router.get("/cleaners", cltr.getCleaners)
 router.post("/cleaners/order/accept/:id", cltr.accept)
+router.post("/cleaners/order/decline/:id", cltr.decline)
 router.post("/cleaners/order/end/:id", cltr.end)
 router.post("/cleaners/order/start/:id", cltr.start)
 router.delete("/cleaners/order/cancel/:id", cltr.cancel)
