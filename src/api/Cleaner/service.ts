@@ -30,7 +30,12 @@ class Service {
   async pendingOrders(){
     try {
       const data = await Order.paginate(
-        { status: "pending", paid: true },
+        { 
+          status: "pending", 
+          paid: "initialized",
+          $expr: { $lt: [{ $size: '$cleaners' }, '$num_cleaners'] },
+          scheduled_at: { $gt: dayjs().toISOString }
+        },
         { 
           sort: { created_at: -1 },
           populate: { path: "user", select: "first_name last_name phone_number avatar" }

@@ -29,7 +29,7 @@ export interface IOrder {
   amount: number
   tip: number
   currency: string
-  paid: boolean
+  paid: string // pending initialized completed declined
   payment_ref: string
   status: string // pending cancelled ongoing ended completed
   cleaners: IOrderCleaner[]
@@ -79,7 +79,11 @@ const order = new Schema<IOrder>({
   amount: { type: Number },
   tip: { type: Number, default: 0 },
   currency: String,
-  paid: {type: Boolean, default: false},
+  paid: { 
+    type: String, 
+    default: "pending",
+    enum: ["pending", "initialized", "completed"]
+  },
   payment_ref: String,
   status: {
     type: String,

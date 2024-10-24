@@ -16,6 +16,7 @@ export interface IUser {
   password: string
   avatar: string
   balance: number
+  escrow: number
   currency: string
   roles: string
   email_verified: boolean
@@ -42,10 +43,8 @@ const user = new Schema<IUser>({
     default: false
   },
   currency: String,
-  balance: {
-    type: Number,
-    default: 0
-  },
+  balance: { type: Number, default: 0 },
+  escrow: { type: Number, default: 0 },
   phone_number: {
     type: String,
     trim: true

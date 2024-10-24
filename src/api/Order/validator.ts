@@ -3,10 +3,8 @@ import { body } from "express-validator";
 export default {
   create: [
     body("service").notEmpty().withMessage("Service is required"),
-    // body("note").notEmpty().withMessage("Note is required"),
-    // body("location.address").notEmpty().withMessage("Address is required"),
     body("coordinates").notEmpty().withMessage("Coordinates is required").isArray().withMessage("Invalid coordinate format"),
-    body("start_date").notEmpty().withMessage("Start date is required").isNumeric().withMessage("start date must be a number"),
+    body("start_date").optional().isNumeric().withMessage("start date must be a number"),
     body("config").notEmpty().withMessage("Enter the configuration").isObject().withMessage("Config must be an object")
   ],
   addCleaner: [
@@ -26,7 +24,7 @@ export default {
   ],
   reorder: [
     body("order").notEmpty().withMessage("Order id is required").isMongoId().withMessage("Invalid order id"),
-    body("start_date").notEmpty().withMessage("Start date is required").isNumeric().withMessage("start date must be a number in unix format"),
+    body("start_date").optional().isNumeric().withMessage("start date must be a number in unix format")
   ],
   review: [
     body("order").notEmpty().withMessage("Order id is required").isMongoId().withMessage("Invalid order id"),

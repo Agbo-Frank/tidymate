@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import Order from "../../model/order";
-import { IAddCleaner, ICreateOrder, IProcessPayment, IReOrder, IReview, ITip } from "./interface";
-import { BadRequestException, NotFoundException, UnauthorizedException } from "../../utility/service-error";
+import { ICreateOrder, IProcessPayment, IReOrder, IReview, ITip } from "./interface";
+import { BadRequestException, NotFoundException } from "../../utility/service-error";
 import { compareStrings, geocoder, isEmpty } from "../../utility/helpers";
 import Card from "../../model/cards";
 import numeral from "numeral"
@@ -9,7 +9,7 @@ import { chargeCard } from "../../service/stripe/charge-card";
 import Transaction from "../../model/transaction";
 import Cleaner, { ICleaner } from "../../model/cleaner";
 import Review from "../../model/review";
-import { createPayment } from "../../service/paypalv2";
+import { capturePayment, createPayment } from "../../service/paypalv2";
 import User, { IUser } from "../../model/user";
 import History from "../../model/history";
 
@@ -24,7 +24,7 @@ class Service {
       user, num_cleaners,
       estimated_duration: duration,
       location: { coordinates }, config,
-      scheduled_at: dayjs.unix(start_date).toISOString()
+      scheduled_at: isEmpty(start_date) ? dayjs().toISOString() : dayjs.unix(start_date).toISOString()
     })
 
     const location = await geocoder(coordinates)
@@ -38,7 +38,6 @@ class Service {
       })
     }
     await order.save()
-
     return { message: "Order created successfully", data: order }
   }
 
@@ -85,7 +84,7 @@ class Service {
       paid: false,
       status: "pending",
       location: order.location,
-      start_date: dayjs.unix(payload.start_date).toISOString()
+      scheduled_at: isEmpty(payload.start_date) ? dayjs().toISOString() : dayjs.unix(payload.start_date).toISOString()
     })
 
     await newOrder.save()
@@ -108,11 +107,13 @@ class Service {
         throw new BadRequestException("Insufficient balance, please fund your wallet")
       }
       user.balance = numeral(user.balance).subtract(order.amount).value()
+      user.escrow = numeral(user.escrow).add(order.amount).value()
+
       await user.save()
 
       const tx = await Transaction.create({
         user: user_id,
-        status: "successful",
+        status: "pending",
         narration: "Service charge",
         amount: order.amount,
         type: "charge"
@@ -120,7 +121,7 @@ class Service {
 
       order.payment_ref = tx?.id
       order.payment_method = "wallet"
-      order.paid = true
+      order.paid = "initialized"
       await order.save()
     }
 
@@ -245,9 +246,26 @@ class Service {
     return { message: "Tip recieved successfully", data: null }
   }
 
-  async complete(id: string, user: string){
-    const order = await Order.findOne({ _id: id, user })
+  async complete(id: string, user_id: string){
+    const order = await Order.findOne({ _id: id, user: user_id })
     if(!order) throw new NotFoundException("Order not found");
+
+    if(order.payment_method === "wallet"){
+      const user = await User.findById(user_id)
+      if(!user) throw new NotFoundException("User not found");
+
+      user.escrow = numeral(user.escrow).subtract(order.amount).value()
+      await user.save()
+
+      await Transaction.updateOne(
+        { _id: order.payment_ref },
+        { status: "successful" }
+      )
+      order.paid = "completed"
+    }
+    else if(order.payment_method === "paypal"){
+      await capturePayment(order.payment_ref)
+    }
 
     /**
      * during confirmation ensure the user(homeowner) has completed payment
@@ -256,7 +274,8 @@ class Service {
      * 
      */
 
-    await order.updateOne({status: "completed"})
+    order.status = "completed"
+    await order.save()
     return { message: "Order completed successfully", data: null }
   }
   
