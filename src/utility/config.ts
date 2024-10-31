@@ -22,3 +22,5 @@ export const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
 export const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET;
 
 export const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY
+export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID
+export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET

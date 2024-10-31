@@ -113,6 +113,7 @@ class Controller {
       const { message, data } = await service.processPayment(req.body, req.user)
       return responsHandler(res, message, StatusCodes.CREATED, data)
     } catch (error) {
+      console.log(error)
       next(error)
     }
   }

@@ -137,6 +137,7 @@ class Service {
 
       order.payment_ref = result?.id
       order.payment_method = "card"
+      order.paid = "initialized"
       await order.save()
       //TODO: handle the webhook
     }
@@ -154,6 +155,7 @@ class Service {
 
       order.payment_ref = result?.id
       order.payment_method = "paypal"
+      order.paid = "initialized"
       await order.save()
     }
 

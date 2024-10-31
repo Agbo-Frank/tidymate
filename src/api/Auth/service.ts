@@ -1,7 +1,9 @@
+import { google } from "googleapis";
 import Cleaner from "../../model/cleaner";
 import Referral from "../../model/referral";
 import User from "../../model/user";
 import mail from "../../service/mail";
+import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } from "../../utility/config";
 import { compareStrings, hashPassword, isEmpty, randAlphaNum } from "../../utility/helpers";
 import jwt from "../../utility/jwt";
 import { BadRequestException, NotFoundException } from "../../utility/service-error";
@@ -39,6 +41,51 @@ class Service {
     return { message: "User login successful", data }
   }
 
+  async loginWithGoogle({ redirect_url}){
+    const oauth2Client = new google.auth.OAuth2(
+      GOOGLE_CLIENT_ID,
+      GOOGLE_CLIENT_SECRET,
+      redirect_url
+    );
+
+    const url = oauth2Client.generateAuthUrl({ scope: "https://www.googleapis.com/auth/userinfo.profile" })
+    return { message: "", data: { url }}
+  }
+
+  async getGoogleProfile({ code }) {
+    const oauth2Client = new google.auth.OAuth2(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
+    const { tokens } = await oauth2Client.getToken(code)
+    oauth2Client.setCredentials(tokens);
+
+    const oauth2 = google.oauth2({ auth: oauth2Client, version: 'v2' });
+
+    const { data } = await oauth2.userinfo.get();
+    let user = await User.findOne({ email: data.email })
+    if(!user){
+      user = await User.create({
+        email: data.email,
+        first_name: data.given_name,
+        last_name: data.given_name,
+        gender: data?.gender,
+        email_verified: true,
+        referral_code: randAlphaNum(8),
+        provider: ['google']
+      })
+    }
+
+    const token = jwt.create({roles: user.roles, id: user?.id})
+    const result = { 
+      token,
+      user: {
+        ...user.toJSON(),
+        kyc_required: false
+      }, 
+      role: user?.roles || "homeowner" 
+    }
+
+    return { message: "User signin successful", data: result }
+  }
+
   async register(payload: IRegister){
     const { email, first_name, last_name, phone_number, referral_code} = payload
     let user = await User.findOne({ email })
@@ -50,6 +97,7 @@ class Service {
       email, first_name, 
       last_name, phone_number,
       password,
+      provider: ["password"],
       referral_code: randAlphaNum(8)
     })
 

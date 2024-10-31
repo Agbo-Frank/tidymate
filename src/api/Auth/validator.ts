@@ -1,10 +1,11 @@
-import { body } from "express-validator";
+import { body, query } from "express-validator";
 
 export const emailValidator = body("email").notEmpty().withMessage("Email is required").isEmail().withMessage("Invalid email addresss").toLowerCase()
 export const passwordValidator = body("password").notEmpty().withMessage("Password is required")
 
 export default {
   login: [ emailValidator, passwordValidator ],
+  loginWithGoogle: query("redirect_url").notEmpty().withMessage("Redirect url is required"),
   verifyOtp: [
     emailValidator,
     body("code").notEmpty().withMessage("Code is required")

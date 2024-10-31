@@ -17,6 +17,30 @@ class Controller {
       next(error)
     }
   }
+  // https://puplar.com/?code=4%2F0AVG7fiQxpH41wroHoc9IBeiU-AFLsjnSVKg6JgYYIFLD0C76VMj-mQKxjz2aLGhfNugNNA&scope=profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile
+  async loginWithGoogle(req: any, res: Response, next: NextFunction){
+    try {
+      validateRequest(req)
+
+      const { message, data } = await service.loginWithGoogle(req.query)
+
+      return responsHandler(res, message, StatusCodes.OK, data)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async getGoogleProfile(req: any, res: Response, next: NextFunction){
+    try {
+      validateRequest(req)
+
+      const { message, data } = await service.getGoogleProfile(req.query)
+
+      return responsHandler(res, message, StatusCodes.OK, data)
+    } catch (error) {
+      next(error)
+    }
+  }
 
   async register(req: Request, res: Response, next: NextFunction){
     try {

@@ -11,8 +11,10 @@ export interface IUser {
   _id?: string
   first_name: string
   last_name: string
+  gender: string
   email: string
   phone_number: string
+  provider: string[]
   password: string
   avatar: string
   balance: number
@@ -32,6 +34,11 @@ const user = new Schema<IUser>({
   },
   first_name: String,
   last_name: String,
+  gender: {
+    type: String,
+    enum: ["male", "female"]
+  },
+  provider: [String],
   email: {
     type: String,
     lowercase: true,
