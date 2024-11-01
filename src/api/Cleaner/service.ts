@@ -29,12 +29,13 @@ class Service {
 
   async pendingOrders(){
     try {
+      const currentdate = dayjs().toISOString()
       const data = await Order.paginate(
         { 
           status: "pending", 
           paid: "initialized",
           $expr: { $lt: [{ $size: '$cleaners' }, '$num_cleaners'] },
-          scheduled_at: { $gt: dayjs().toISOString }
+          scheduled_at: { $lte: currentdate }
         },
         { 
           sort: { created_at: -1 },
@@ -242,7 +243,7 @@ class Service {
     
     await cleaner.updateOne({ 
       location: {
-        coordinates: [ payload.long, payload.lat ]
+        coordinates: [payload.lat, payload.long]
       } 
     })
 

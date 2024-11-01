@@ -188,6 +188,7 @@ class Service {
         const cleaner = cleaners.find(c => c.user.toString() === orderCleaner.user)
 
         orderCleaner["avg_rating"] = cleaner.avg_rating 
+        orderCleaner["coordinates"] = cleaner.location.coordinates
         return orderCleaner
       })
 
