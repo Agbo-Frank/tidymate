@@ -86,6 +86,16 @@ class Controller {
     }
   }
 
+  async getOrderCleaners(req: any, res: Response, next: NextFunction){
+    try {
+      const { message, data } = await service.getOrderCleaners(req.params.id)
+
+      return responsHandler(res, message, StatusCodes.OK, data)
+    } catch (error) {
+      next(error)
+    }
+  }
+
   async cancel(req: any, res: Response, next: NextFunction){
     try {
       const { message, data } = await service.cancel(req.params.id, req.user)

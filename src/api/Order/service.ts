@@ -197,7 +197,16 @@ class Service {
       console.log(err)
       return null
     }
-    
+  }
+
+  async getOrderCleaners(id: string){
+    const order = await Order.findById(id)
+    if(!order) throw new NotFoundException("Order not found");
+
+    const cleaner_ids = order.cleaners.map(c => c.user)
+    const data = await User.find({ _id: cleaner_ids}).populate("cleaner").select("first_name last_name avatar cleaner")
+
+    return { message: "Order cleaners retreved successfully", data }
   }
 
   async cancel(_id: string, user: string){
