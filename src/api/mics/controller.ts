@@ -13,6 +13,16 @@ class Controller {
       next(error)
     }
   } 
+  async getDirection(req: any, res: Response, next: NextFunction) {
+    try {
+      validateRequest(req)
+      const { message, data } = await service.getDirection(req.body)
+      return responsHandler(res, message, StatusCodes.OK, data)
+    } catch (error) {
+      next(error)
+    }
+  } 
+
   async history(req: any, res: Response, next: NextFunction) {
     try {
       const { message, data } = await service.history(req.user)

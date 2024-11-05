@@ -6,5 +6,6 @@ const router = Router()
 
 router.post("/search-location", valid.searhlocation, cltr.autoCompleteSearch)
 router.get("/location-history", cltr.history)
+router.post("/direction", cltr.getDirection)
 
 export default router
