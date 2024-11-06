@@ -24,6 +24,7 @@ export interface IUser {
   email_verified: boolean
   referral_code: string
   created_at: string
+  socket: string
   cleaner: string | typeof Types.ObjectId
 } 
 
@@ -58,6 +59,7 @@ const user = new Schema<IUser>({
   },
   password: String,
   roles: String,
+  socket: String,
   cleaner: {
     type: Types.ObjectId,
     ref: "cleaner"

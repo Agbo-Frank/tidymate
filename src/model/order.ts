@@ -35,6 +35,7 @@ export interface IOrder {
   cleaners: IOrderCleaner[]
   payment_method: string,
   metadata: any
+  socket: string
   location: {
     address: string,
     type: string,
@@ -91,6 +92,7 @@ const order = new Schema<IOrder>({
   },
   cleaners: [ orderCleaner ],
   payment_method: String,
+  socket: String,
   location: {
     address: String,
     type: { type: String, default: "Point"},

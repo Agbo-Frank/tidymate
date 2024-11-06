@@ -6,11 +6,11 @@ import { connectMongodb } from './service/mongoose';
 import Logger from './utility/logger';
 import api from './api';
 import redis from "./service/redis"
+import { createServer } from 'http';
 
 const logger = new Logger("server")
 
 const app = express();
-
 
 redis.connect();
 connectMongodb()
@@ -33,4 +33,6 @@ api(app)
 app.use(ErrorHandler)
 
 app.disable('x-powered-by')
-export default app
+
+const server = createServer(app);
+export default server
