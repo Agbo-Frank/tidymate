@@ -1,13 +1,12 @@
 import Card from "../../model/cards";
 import { Response} from "express"
 import Transaction from "../../model/transaction";
-import { createPayment } from "../../service/paypalv2";
+import { capturePayment, createPayment } from "../../service/paypalv2";
 import { chargeCard } from "../../service/stripe/charge-card";
-import { compareStrings, randAlphaNum, responsHandler } from "../../utility/helpers";
+import { compareStrings } from "../../utility/helpers";
 import { IPagination } from "../../utility/interface";
 import { BadRequestException, NotFoundException, ServiceError } from "../../utility/service-error";
-import { IDeposit } from "./interface";
-import { StatusCodes } from "http-status-codes";
+import { IDeposit } from "./interface";;
 import User from "../../model/user";
 
 class Service {
@@ -40,6 +39,7 @@ class Service {
       const result = await createPayment({
         amount, reference: `WAL-${tx.id.slice(-8)}`,
         description: "Tidymate Wallet Funding",
+        intent: "CAPTURE",
         callback_url: payload?.callback_url
       })
       
