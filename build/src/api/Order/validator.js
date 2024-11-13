@@ -4,10 +4,8 @@ const express_validator_1 = require("express-validator");
 exports.default = {
     create: [
         (0, express_validator_1.body)("service").notEmpty().withMessage("Service is required"),
-        // body("note").notEmpty().withMessage("Note is required"),
-        // body("location.address").notEmpty().withMessage("Address is required"),
         (0, express_validator_1.body)("coordinates").notEmpty().withMessage("Coordinates is required").isArray().withMessage("Invalid coordinate format"),
-        (0, express_validator_1.body)("start_date").notEmpty().withMessage("Start date is required").isNumeric().withMessage("start date must be a number"),
+        (0, express_validator_1.body)("start_date").optional().isNumeric().withMessage("start date must be a number"),
         (0, express_validator_1.body)("config").notEmpty().withMessage("Enter the configuration").isObject().withMessage("Config must be an object")
     ],
     addCleaner: [
@@ -27,7 +25,7 @@ exports.default = {
     ],
     reorder: [
         (0, express_validator_1.body)("order").notEmpty().withMessage("Order id is required").isMongoId().withMessage("Invalid order id"),
-        (0, express_validator_1.body)("start_date").notEmpty().withMessage("Start date is required").isNumeric().withMessage("start date must be a number in unix format"),
+        (0, express_validator_1.body)("start_date").optional().isNumeric().withMessage("start date must be a number in unix format")
     ],
     review: [
         (0, express_validator_1.body)("order").notEmpty().withMessage("Order id is required").isMongoId().withMessage("Invalid order id"),

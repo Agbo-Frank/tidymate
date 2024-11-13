@@ -11,6 +11,7 @@ const mongoose_1 = require("./service/mongoose");
 const logger_1 = __importDefault(require("./utility/logger"));
 const api_1 = __importDefault(require("./api"));
 const redis_1 = __importDefault(require("./service/redis"));
+const http_1 = require("http");
 const logger = new logger_1.default("server");
 const app = (0, express_1.default)();
 redis_1.default.connect();
@@ -31,5 +32,6 @@ app.use((req, _, next) => {
 (0, api_1.default)(app);
 app.use(error_handler_1.default);
 app.disable('x-powered-by');
-exports.default = app;
+const server = (0, http_1.createServer)(app);
+exports.default = server;
 //# sourceMappingURL=app.js.map

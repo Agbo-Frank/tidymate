@@ -18,6 +18,11 @@ const user = new mongoose_1.Schema({
     },
     first_name: String,
     last_name: String,
+    gender: {
+        type: String,
+        enum: ["male", "female"]
+    },
+    provider: [String],
     email: {
         type: String,
         lowercase: true,
@@ -29,16 +34,15 @@ const user = new mongoose_1.Schema({
         default: false
     },
     currency: String,
-    balance: {
-        type: Number,
-        default: 0
-    },
+    balance: { type: Number, default: 0 },
+    escrow: { type: Number, default: 0 },
     phone_number: {
         type: String,
         trim: true
     },
     password: String,
     roles: String,
+    socket: String,
     cleaner: {
         type: mongoose_1.Types.ObjectId,
         ref: "cleaner"

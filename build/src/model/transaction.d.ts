@@ -29,6 +29,7 @@ export interface ITransaction {
     status: string | "successful" | "pending" | "failed";
     type: string | "funding" | "charge" | "commission";
     payment_method: string;
+    fee: number;
     user: string;
     narration: string;
     payment_ref: string;

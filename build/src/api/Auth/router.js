@@ -31,30 +31,12 @@ const controller_1 = __importDefault(require("./controller"));
 const validator_1 = __importStar(require("./validator"));
 const guard_1 = __importStar(require("../../middleware/guard"));
 const router = (0, express_1.Router)();
-// passport.use(new GoogleStrategy({
-//   clientID: "1085337230569-a0o0pj4uotd96mittl6ecohe9crnanfc.apps.googleusercontent.com",
-//   clientSecret: "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",
-//   callbackURL: '/oauth2/redirect/google',
-//   scope: [ 'profile' ]
-// }, function verify(issuer, profile, cb) {
-//   console.log(issuer, profile)
-// }))
-// passport.serializeUser(function(user, cb) {
-//   process.nextTick(function() {
-//     console.log(user)
-//     // cb(null, { id: user.id, username: user.username, name: user.name });
-//   });
-// });
-// passport.deserializeUser(function(user, cb) {
-//   process.nextTick(function() {
-//     return cb(null, user);
-//   });
-// });
-router.post("/auth/login", validator_1.default.login, controller_1.default.login);
-// router.get("/auth/google", passport.authenticate('google'))
-router.post("/auth/register", validator_1.default.register, controller_1.default.register);
-router.post("/auth/send-otp", validator_1.emailValidator, controller_1.default.sendOTP);
-router.post("/auth/verify-otp", validator_1.default.verifyOtp, controller_1.default.verifyOtp);
-router.post("/auth/reset-password", validator_1.passwordValidator, guard_1.guardValid, guard_1.default, controller_1.default.resetPassword);
+router.post("/login", validator_1.default.login, controller_1.default.login);
+router.get("/google", validator_1.default.loginWithGoogle, controller_1.default.loginWithGoogle);
+router.get("/google/profile", validator_1.default.loginWithGoogle, controller_1.default.getGoogleProfile);
+router.post("/register", validator_1.default.register, controller_1.default.register);
+router.post("/send-otp", validator_1.emailValidator, controller_1.default.sendOTP);
+router.post("/verify-otp", validator_1.default.verifyOtp, controller_1.default.verifyOtp);
+router.post("/reset-password", validator_1.passwordValidator, guard_1.guardValid, guard_1.default, controller_1.default.resetPassword);
 exports.default = router;
 //# sourceMappingURL=router.js.map

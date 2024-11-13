@@ -9,5 +9,6 @@ const validator_1 = __importDefault(require("./validator"));
 const router = (0, express_1.Router)();
 router.post("/search-location", validator_1.default.searhlocation, controller_1.default.autoCompleteSearch);
 router.get("/location-history", controller_1.default.history);
+router.post("/direction", controller_1.default.getDirection);
 exports.default = router;
 //# sourceMappingURL=routes.js.map

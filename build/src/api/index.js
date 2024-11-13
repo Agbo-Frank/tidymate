@@ -36,14 +36,14 @@ const routes_3 = __importDefault(require("./Cleaner/routes"));
 const routes_4 = __importDefault(require("./mics/routes"));
 const guard_1 = __importStar(require("../middleware/guard"));
 function default_1(app) {
-    app.use("/", router_1.default);
-    app.use("/", routes_2.default);
-    app.use("/", guard_1.guardValid, guard_1.default, routes_1.default);
+    app.use("/auth", router_1.default);
+    app.use(routes_2.default);
+    app.use(guard_1.guardValid, guard_1.default, routes_4.default);
+    app.use("/wallet", guard_1.guardValid, guard_1.default, routes_1.default);
     app.use("/", guard_1.guardValid, guard_1.default, router_4.default);
-    app.use("/", guard_1.guardValid, guard_1.default, router_2.default);
-    app.use("/", guard_1.guardValid, guard_1.default, router_3.default);
-    app.use("/", guard_1.guardValid, guard_1.default, routes_3.default);
-    app.use("/", guard_1.guardValid, guard_1.default, routes_4.default);
+    app.use("/users", guard_1.guardValid, guard_1.default, router_2.default);
+    app.use("/orders", guard_1.guardValid, guard_1.default, router_3.default);
+    app.use("/cleaners", guard_1.guardValid, guard_1.default, routes_3.default);
 }
 exports.default = default_1;
 //# sourceMappingURL=index.js.map

@@ -9,6 +9,7 @@ const paypalv2_1 = require("../../service/paypalv2");
 const charge_card_1 = require("../../service/stripe/charge-card");
 const helpers_1 = require("../../utility/helpers");
 const service_error_1 = require("../../utility/service-error");
+;
 const user_1 = __importDefault(require("../../model/user"));
 class Service {
     //@ts-ignore
@@ -39,6 +40,7 @@ class Service {
             const result = await (0, paypalv2_1.createPayment)({
                 amount, reference: `WAL-${tx.id.slice(-8)}`,
                 description: "Tidymate Wallet Funding",
+                intent: "CAPTURE",
                 callback_url: payload === null || payload === void 0 ? void 0 : payload.callback_url
             });
             const link = result.links.find(l => (0, helpers_1.compareStrings)(l.rel, "payer-action"));

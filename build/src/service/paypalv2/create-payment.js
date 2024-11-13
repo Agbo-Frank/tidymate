@@ -7,7 +7,12 @@ exports.createPayment = void 0;
 const numeral_1 = __importDefault(require("numeral"));
 const client_1 = __importDefault(require("./client"));
 const service_error_1 = require("../../utility/service-error");
-async function createPayment({ reference, amount, description, callback_url }) {
+/**
+ * the intent can be CAPTURE or AUTHORIZE
+ * CAPTURE is for instant capture of payment like initiating an immediate payment
+ * AUTHORIZE is for authorizing payment  that will need to be captured later
+ */
+async function createPayment({ reference, amount, description, callback_url, intent = "AUTHORIZE" }) {
     try {
         const _url = (status) => {
             const [url, search] = callback_url.split("?");
@@ -15,9 +20,8 @@ async function createPayment({ reference, amount, description, callback_url }) {
             params.append("status", status);
             return url + "?" + params.toString();
         };
-        console.log(_url("success"));
         const payload = {
-            "intent": "CAPTURE",
+            intent,
             "purchase_units": [
                 {
                     "custom_id": reference,

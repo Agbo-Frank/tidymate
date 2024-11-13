@@ -20,7 +20,7 @@ const notifications_1 = __importDefault(require("../../model/notifications"));
 const cloudinary_1 = __importDefault(require("../../service/cloudinary"));
 class Service {
     async profile(id) {
-        const user = await user_1.default.findById(id).select("-password");
+        const user = await user_1.default.findById(id).select("-password").populate("cleaner", "-docs");
         if (!user)
             throw new service_error_1.BadRequestException("user not found");
         return { message: "User profile retrieved successfully", data: user };

@@ -35,16 +35,58 @@ declare class Service {
                 _id: string;
                 first_name: string;
                 last_name: string;
+                gender: string;
                 email: string;
                 phone_number: string;
+                provider: string[];
                 password: string;
                 avatar: string;
                 balance: number;
+                escrow: number;
                 currency: string;
                 roles: string;
                 email_verified: boolean;
                 referral_code: string;
                 created_at: string;
+                socket: string;
+                cleaner: string | typeof import("mongoose").Types.ObjectId;
+            };
+            role: string;
+        };
+    }>;
+    loginWithGoogle({ redirect_url }: {
+        redirect_url: any;
+    }): Promise<{
+        message: string;
+        data: {
+            url: string;
+        };
+    }>;
+    getGoogleProfile({ code }: {
+        code: any;
+    }): Promise<{
+        message: string;
+        data: {
+            token: string;
+            user: {
+                kyc_required: boolean;
+                _id: string;
+                first_name: string;
+                last_name: string;
+                gender: string;
+                email: string;
+                phone_number: string;
+                provider: string[];
+                password: string;
+                avatar: string;
+                balance: number;
+                escrow: number;
+                currency: string;
+                roles: string;
+                email_verified: boolean;
+                referral_code: string;
+                created_at: string;
+                socket: string;
                 cleaner: string | typeof import("mongoose").Types.ObjectId;
             };
             role: string;

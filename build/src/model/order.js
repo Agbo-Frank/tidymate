@@ -12,10 +12,6 @@ const orderCleaner = new mongoose_1.Schema({
     },
     name: String,
     avatar: String,
-    accepted: {
-        type: Boolean,
-        default: false
-    },
     leader: {
         type: Boolean,
         default: false
@@ -45,7 +41,11 @@ const order = new mongoose_1.Schema({
     amount: { type: Number },
     tip: { type: Number, default: 0 },
     currency: String,
-    paid: { type: Boolean, default: false },
+    paid: {
+        type: String,
+        default: "pending",
+        enum: ["pending", "initialized", "completed"]
+    },
     payment_ref: String,
     status: {
         type: String,
@@ -53,8 +53,10 @@ const order = new mongoose_1.Schema({
     },
     cleaners: [orderCleaner],
     payment_method: String,
+    socket: String,
     location: {
         address: String,
+        type: { type: String, default: "Point" },
         coordinates: [Number]
     },
     metadata: mongoose_1.Schema.Types.Mixed

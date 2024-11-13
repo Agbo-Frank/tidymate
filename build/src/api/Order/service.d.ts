@@ -24,7 +24,8 @@
 /// <reference types="mongoose" />
 /// <reference types="mongoose/types/inferschematype" />
 /// <reference types="mongoose-paginate-v2" />
-import { IAddCleaner, ICreateOrder, IProcessPayment, IReOrder, IReview, ITip } from "./interface";
+import { ICreateOrder, IProcessPayment, IReOrder, IReview, ITip } from "./interface";
+import { IUser } from "../../model/user";
 declare class Service {
     create(payload: ICreateOrder, user: string): Promise<{
         message: string;
@@ -44,10 +45,6 @@ declare class Service {
             _id: import("mongoose").Types.ObjectId;
         };
     }>;
-    addCleaners(payload: IAddCleaner, user: string): Promise<{
-        message: string;
-        data: any[];
-    }>;
     processPayment(payload: IProcessPayment, user_id: string): Promise<{
         message: string;
         data: any;
@@ -60,9 +57,17 @@ declare class Service {
     }>;
     getOrder(id: string, user: string): Promise<{
         message: string;
-        data: import("mongoose").Document<unknown, {}, import("../../model/order").IOrder> & import("../../model/order").IOrder & {
+        data: import("../../model/order").IOrder & {
             _id: import("mongoose").Types.ObjectId;
-        };
+        } & Required<{
+            _id: import("mongoose").Types.ObjectId;
+        }>;
+    }>;
+    getOrderCleaners(id: string): Promise<{
+        message: string;
+        data: (import("mongoose").Document<unknown, {}, IUser> & IUser & Required<{
+            _id: string;
+        }>)[];
     }>;
     cancel(_id: string, user: string): Promise<{
         message: string;
@@ -78,11 +83,10 @@ declare class Service {
         message: string;
         data: any;
     }>;
-    complete(id: string, user: string): Promise<{
+    complete(id: string, user_id: string): Promise<{
         message: string;
         data: any;
     }>;
-    private selectLeader;
     private calculateOrderAmount;
 }
 declare const _default: Service;

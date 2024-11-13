@@ -11,6 +11,10 @@ const transaction = new mongoose_1.Schema({
         type: String,
         default: "pending"
     },
+    fee: {
+        type: Number,
+        default: 0
+    },
     type: String,
     user: String,
     narration: String,

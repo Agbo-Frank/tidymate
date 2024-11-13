@@ -18,6 +18,27 @@ class Controller {
             next(error);
         }
     }
+    // https://puplar.com/?code=4%2F0AVG7fiQxpH41wroHoc9IBeiU-AFLsjnSVKg6JgYYIFLD0C76VMj-mQKxjz2aLGhfNugNNA&scope=profile+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile
+    async loginWithGoogle(req, res, next) {
+        try {
+            (0, helpers_1.validateRequest)(req);
+            const { message, data } = await service_1.default.loginWithGoogle(req.query);
+            return (0, helpers_1.responsHandler)(res, message, http_status_codes_1.StatusCodes.OK, data);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    async getGoogleProfile(req, res, next) {
+        try {
+            (0, helpers_1.validateRequest)(req);
+            const { message, data } = await service_1.default.getGoogleProfile(req.query);
+            return (0, helpers_1.responsHandler)(res, message, http_status_codes_1.StatusCodes.OK, data);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
     async register(req, res, next) {
         try {
             (0, helpers_1.validateRequest)(req);

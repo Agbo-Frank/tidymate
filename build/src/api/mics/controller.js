@@ -17,6 +17,16 @@ class Controller {
             next(error);
         }
     }
+    async getDirection(req, res, next) {
+        try {
+            (0, helpers_1.validateRequest)(req);
+            const { message, data } = await service_1.default.getDirection(req.body);
+            return (0, helpers_1.responsHandler)(res, message, http_status_codes_1.StatusCodes.OK, data);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
     async history(req, res, next) {
         try {
             const { message, data } = await service_1.default.history(req.user);

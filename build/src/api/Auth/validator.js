@@ -6,6 +6,7 @@ exports.emailValidator = (0, express_validator_1.body)("email").notEmpty().withM
 exports.passwordValidator = (0, express_validator_1.body)("password").notEmpty().withMessage("Password is required");
 exports.default = {
     login: [exports.emailValidator, exports.passwordValidator],
+    loginWithGoogle: (0, express_validator_1.query)("redirect_url").notEmpty().withMessage("Redirect url is required"),
     verifyOtp: [
         exports.emailValidator,
         (0, express_validator_1.body)("code").notEmpty().withMessage("Code is required")

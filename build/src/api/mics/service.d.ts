@@ -24,7 +24,12 @@
 /// <reference types="mongoose" />
 /// <reference types="mongoose/types/inferschematype" />
 /// <reference types="mongoose-paginate-v2" />
+import { IDirection } from "./interface";
 declare class Service {
+    getDirection(payload: IDirection): Promise<{
+        data: any;
+        message: string;
+    }>;
     locationSearch(payload: any): Promise<{
         data: any;
         message: string;

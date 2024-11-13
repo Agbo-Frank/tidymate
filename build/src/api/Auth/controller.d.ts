@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 declare class Controller {
     login(req: Request, res: Response, next: NextFunction): Promise<void>;
+    loginWithGoogle(req: any, res: Response, next: NextFunction): Promise<void>;
+    getGoogleProfile(req: any, res: Response, next: NextFunction): Promise<void>;
     register(req: Request, res: Response, next: NextFunction): Promise<void>;
     sendOTP(req: Request, res: Response, next: NextFunction): Promise<void>;
     resetPassword(req: any, res: Response, next: NextFunction): Promise<void>;

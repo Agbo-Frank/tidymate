@@ -16,6 +16,15 @@ class Controller {
             next(error);
         }
     }
+    async pendingOrders(req, res, next) {
+        try {
+            const { message, data } = await service_1.default.pendingOrders();
+            return (0, helpers_1.responsHandler)(res, message, http_status_codes_1.StatusCodes.OK, data);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
     async profile(req, res, next) {
         try {
             const { message, data } = await service_1.default.profile(req.user);
@@ -76,6 +85,15 @@ class Controller {
     async accept(req, res, next) {
         try {
             const { message, data } = await service_1.default.accept(req.params.id, req.user);
+            return (0, helpers_1.responsHandler)(res, message, http_status_codes_1.StatusCodes.OK, data);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    async decline(req, res, next) {
+        try {
+            const { message, data } = await service_1.default.decline(req.params.id, req.user);
             return (0, helpers_1.responsHandler)(res, message, http_status_codes_1.StatusCodes.OK, data);
         }
         catch (error) {

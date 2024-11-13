@@ -28,7 +28,6 @@ interface IOrderCleaner {
     user: string | typeof Types.ObjectId;
     name: string;
     avatar: string;
-    accepted: boolean;
     leader: boolean;
 }
 export interface IOrder {
@@ -52,14 +51,16 @@ export interface IOrder {
     amount: number;
     tip: number;
     currency: string;
-    paid: boolean;
+    paid: string;
     payment_ref: string;
     status: string;
     cleaners: IOrderCleaner[];
     payment_method: string;
     metadata: any;
+    socket: string;
     location: {
         address: string;
+        type: string;
         coordinates: number[];
     };
 }

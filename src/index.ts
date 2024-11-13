@@ -1,4 +1,5 @@
 import { PORT } from "./utility/config"
+import "./io"
 import app from "./app"
 import Logger from "./utility/logger"
 import * as config from "./utility/config"

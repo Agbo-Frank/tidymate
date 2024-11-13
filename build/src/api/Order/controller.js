@@ -38,17 +38,6 @@ class Controller {
             next(error);
         }
     }
-    async addCleaners(req, res, next) {
-        try {
-            (0, helpers_1.validateRequest)(req);
-            const { message, data } = await service_1.default.addCleaners(req.body, req.user);
-            return (0, helpers_1.responsHandler)(res, message, http_status_codes_1.StatusCodes.CREATED, data);
-        }
-        catch (error) {
-            console.log(error);
-            next(error);
-        }
-    }
     async review(req, res, next) {
         try {
             (0, helpers_1.validateRequest)(req);
@@ -87,6 +76,15 @@ class Controller {
             next(error);
         }
     }
+    async getOrderCleaners(req, res, next) {
+        try {
+            const { message, data } = await service_1.default.getOrderCleaners(req.params.id);
+            return (0, helpers_1.responsHandler)(res, message, http_status_codes_1.StatusCodes.OK, data);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
     async cancel(req, res, next) {
         try {
             const { message, data } = await service_1.default.cancel(req.params.id, req.user);
@@ -112,6 +110,7 @@ class Controller {
             return (0, helpers_1.responsHandler)(res, message, http_status_codes_1.StatusCodes.CREATED, data);
         }
         catch (error) {
+            console.log(error);
             next(error);
         }
     }

@@ -10,6 +10,7 @@ const service_error_1 = require("../../utility/service-error");
 const cloudinary_1 = __importDefault(require("../../service/cloudinary"));
 const request_1 = __importDefault(require("../../model/request"));
 const dayjs_1 = __importDefault(require("dayjs"));
+const user_1 = __importDefault(require("../../model/user"));
 class Service {
     async orders(user) {
         try {
@@ -18,6 +19,25 @@ class Service {
                 populate: { path: "user", select: "first_name last_name phone_number avatar" }
             });
             return { message: "Orders retreved successfully", data };
+        }
+        catch (error) {
+            console.log(error);
+            throw error;
+        }
+    }
+    async pendingOrders() {
+        try {
+            const currentdate = (0, dayjs_1.default)().toISOString();
+            const data = await order_1.default.paginate({
+                status: "pending",
+                paid: "initialized",
+                $expr: { $lt: [{ $size: '$cleaners' }, '$num_cleaners'] },
+                scheduled_at: { $lte: currentdate }
+            }, {
+                sort: { created_at: -1 },
+                populate: { path: "user", select: "first_name last_name phone_number avatar" }
+            });
+            return { message: "New orders retreved successfully", data };
         }
         catch (error) {
             console.log(error);
@@ -41,7 +61,7 @@ class Service {
         }
         const cleaner = order.cleaners.find(c => c.user == user);
         if (!cleaner || !cleaner.leader) {
-            throw new service_error_1.UnauthorizedException("Only Assigned team lead can start or commerce cleaning");
+            throw new service_error_1.BadRequestException("Only Assigned team lead can start or commerce cleaning");
         }
         const data = await order_1.default.findByIdAndUpdate(id, { started_at: (0, dayjs_1.default)().toISOString(), status: "ongoing" }, { new: true })
             .populate({ path: "user", select: "first_name last_name phone_number avatar" });
@@ -65,16 +85,48 @@ class Service {
         const data = await order_1.default.findByIdAndUpdate(id, { ended_at: (0, dayjs_1.default)().toISOString(), actual_duration, status: "ended" }, { new: true });
         return { message: "Order ended successfully", data };
     }
-    async accept(id, user) {
+    async accept(id, user_id) {
         const order = await order_1.default.findById(id);
         if (!order)
             throw new service_error_1.NotFoundException("Order not found");
-        const cleaner_order = order.cleaners.find(c => c.user == user);
-        if (!cleaner_order)
-            throw new service_error_1.NotFoundException("Order not found or has been declined");
-        cleaner_order.accepted = true;
-        await order.save();
+        if (!(0, helpers_1.compareStrings)(order.status, "pending")) {
+            throw new service_error_1.BadRequestException(`This order has been ${order.status}`);
+        }
+        if (order.cleaners.some(c => c.user === user_id)) {
+            throw new service_error_1.BadRequestException(`You've already accepted this order`);
+        }
+        if (order.cleaners.length >= order.num_cleaners) {
+            throw new service_error_1.BadRequestException(`This order has exceded the maximum number of cleaners`);
+        }
+        const user = await user_1.default.findById(user_id);
+        if (!user)
+            throw new service_error_1.NotFoundException("User not found");
+        if ((0, helpers_1.isEmpty)(user.cleaner))
+            throw new service_error_1.NotFoundException("User is not a registered cleaner");
+        const ids = order.cleaners.map(c => c.user.toString());
+        ids.push(user_id);
+        const cleaners = await cleaner_1.default.find({ user: ids }).populate("user", "first_name last_name avatar");
+        let data = [];
+        if (cleaners.length > 0) {
+            data = this.selectLeader(cleaners);
+            console.log(data);
+            await order.updateOne({ cleaners: data });
+        }
         return { message: "Order accepted successfully", data: null };
+    }
+    async decline(id, user) {
+        const order = await order_1.default.findById(id);
+        if (!order)
+            throw new service_error_1.NotFoundException("Order not found");
+        if (!(0, helpers_1.compareStrings)(order.status, "pending")) {
+            //TODO: charge the user if the order is no longer pending and he has once accepted the order
+            // throw new BadRequestException(`This order has been ${order.status}`)
+        }
+        if (!order.cleaners.some(c => c.user === user)) {
+            throw new service_error_1.BadRequestException(`You've not accepted this order`);
+        }
+        await order.updateOne({ $unset: { cleaners: { user } } });
+        return { message: "Order declined successfully", data: null };
     }
     async requestKit(payload, user) {
         const cleaner = await cleaner_1.default.findOne({ user });
@@ -154,7 +206,7 @@ class Service {
             throw new service_error_1.NotFoundException("Cleaner not found");
         await cleaner.updateOne({
             location: {
-                coordinates: [payload.long, payload.lat]
+                coordinates: [payload.lat, payload.long]
             }
         });
         return { message: "Location set successfully", data: null };
@@ -183,6 +235,25 @@ class Service {
                 queries.push({ [_filters[i][0]]: { $regex: new RegExp(`${_filters[i][1]}`), $options: "i" } });
         }
         return queries;
+    }
+    selectLeader(users) {
+        let highest = -Infinity;
+        let leader = null;
+        users.forEach(user => {
+            if (user.avg_rating > highest) {
+                highest = user.avg_rating;
+                leader = user.user;
+            }
+        });
+        return users.map(user => {
+            var _a, _b, _c, _d;
+            return ({
+                name: ((_a = user.user) === null || _a === void 0 ? void 0 : _a.first_name) + " " + ((_b = user.user) === null || _b === void 0 ? void 0 : _b.last_name),
+                avatar: ((_c = user.user) === null || _c === void 0 ? void 0 : _c.avatar) || null,
+                user: (_d = user.user) === null || _d === void 0 ? void 0 : _d._id,
+                leader: user.user == leader
+            });
+        });
     }
 }
 exports.default = new Service();

@@ -14,3 +14,5 @@ export declare const CLOUDINARY_API_SECRET: string;
 export declare const PAYPAL_CLIENT_ID: string;
 export declare const PAYPAL_CLIENT_SECRET: string;
 export declare const GOOGLE_API_KEY: string;
+export declare const GOOGLE_CLIENT_ID: string;
+export declare const GOOGLE_CLIENT_SECRET: string;

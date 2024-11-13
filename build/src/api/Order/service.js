@@ -25,7 +25,7 @@ class Service {
             user, num_cleaners,
             estimated_duration: duration,
             location: { coordinates }, config,
-            scheduled_at: dayjs_1.default.unix(start_date).toISOString()
+            scheduled_at: (0, helpers_1.isEmpty)(start_date) ? (0, dayjs_1.default)().toISOString() : dayjs_1.default.unix(start_date).toISOString()
         });
         const location = await (0, helpers_1.geocoder)(coordinates);
         if (location) {
@@ -77,30 +77,13 @@ class Service {
             paid: false,
             status: "pending",
             location: order.location,
-            start_date: dayjs_1.default.unix(payload.start_date).toISOString()
+            scheduled_at: (0, helpers_1.isEmpty)(payload.start_date) ? (0, dayjs_1.default)().toISOString() : dayjs_1.default.unix(payload.start_date).toISOString()
         });
         await newOrder.save();
         return {
             message: "Order placed successfully",
             data: newOrder
         };
-    }
-    async addCleaners(payload, user) {
-        const order = await order_1.default.findOne({ user, _id: payload.order });
-        if (!order) {
-            throw new service_error_1.NotFoundException("Order not found");
-        }
-        if (!(0, helpers_1.compareStrings)(order.status, "pending")) {
-            throw new service_error_1.NotFoundException(`This order has been ${order.status}`);
-        }
-        const ids = payload.cleaners.concat(order.cleaners.map(c => c.user.toString()));
-        const cleaners = await cleaner_1.default.find({ user: ids }).populate("user", "first_name last_name avatar");
-        let data = [];
-        if (cleaners.length > 0) {
-            data = this.selectLeader(cleaners);
-            await order.updateOne({ cleaners: data });
-        }
-        return { message: "Cleaners added successfully", data };
     }
     async processPayment(payload, user_id) {
         const order = await order_1.default.findById(payload.order);
@@ -113,17 +96,18 @@ class Service {
                 throw new service_error_1.BadRequestException("Insufficient balance, please fund your wallet");
             }
             user.balance = (0, numeral_1.default)(user.balance).subtract(order.amount).value();
+            user.escrow = (0, numeral_1.default)(user.escrow).add(order.amount).value();
             await user.save();
             const tx = await transaction_1.default.create({
                 user: user_id,
-                status: "successful",
+                status: "pending",
                 narration: "Service charge",
                 amount: order.amount,
                 type: "charge"
             });
             order.payment_ref = tx === null || tx === void 0 ? void 0 : tx.id;
             order.payment_method = "wallet";
-            order.paid = true;
+            order.paid = "initialized";
             await order.save();
         }
         if ((0, helpers_1.compareStrings)(payload.method, "card")) {
@@ -137,6 +121,7 @@ class Service {
             });
             order.payment_ref = result === null || result === void 0 ? void 0 : result.id;
             order.payment_method = "card";
+            order.paid = "initialized";
             await order.save();
             //TODO: handle the webhook
         }
@@ -151,6 +136,7 @@ class Service {
             data = link ? { link: link === null || link === void 0 ? void 0 : link.href } : null;
             order.payment_ref = result === null || result === void 0 ? void 0 : result.id;
             order.payment_method = "paypal";
+            order.paid = "initialized";
             await order.save();
         }
         return { message: "Payment initaited successfully", data };
@@ -161,23 +147,35 @@ class Service {
             filters.push({ status: payload.status });
         }
         const data = await order_1.default.paginate({ $and: filters }, { sort: { created_at: -1 } });
-        console.log(data);
         return { message: "Orders retreved successfully", data };
     }
     async getOrder(id, user) {
         try {
-            let data = await order_1.default.findById(id);
+            let data = (await order_1.default.findById(id)).toObject();
             if (!data)
                 throw new service_error_1.NotFoundException("Order not found");
-            if (data.user.toString() !== user && data.cleaners.every(c => c.user !== user)) {
-                throw new service_error_1.UnauthorizedException("Order not found");
-            }
+            const cleaner_ids = data.cleaners.map(c => c.user);
+            const cleaners = await cleaner_1.default.find({ user: cleaner_ids });
+            data.cleaners = data.cleaners.map(orderCleaner => {
+                const cleaner = cleaners.find(c => c.user.toString() === orderCleaner.user);
+                orderCleaner["avg_rating"] = cleaner.avg_rating;
+                orderCleaner["coordinates"] = cleaner.location.coordinates;
+                return orderCleaner;
+            });
             return { message: "Order retreved successfully", data };
         }
         catch (err) {
             console.log(err);
             return null;
         }
+    }
+    async getOrderCleaners(id) {
+        const order = await order_1.default.findById(id);
+        if (!order)
+            throw new service_error_1.NotFoundException("Order not found");
+        const cleaner_ids = order.cleaners.map(c => c.user);
+        const data = await user_1.default.find({ _id: cleaner_ids }).populate("cleaner").select("first_name last_name avatar cleaner");
+        return { message: "Order cleaners retreved successfully", data };
     }
     async cancel(_id, user) {
         const order = await order_1.default.findOne({ _id, user });
@@ -217,37 +215,31 @@ class Service {
         //TODO: disburbes the tip amoungst the cleaners
         return { message: "Tip recieved successfully", data: null };
     }
-    async complete(id, user) {
-        const order = await order_1.default.findOne({ _id: id, user });
+    async complete(id, user_id) {
+        const order = await order_1.default.findOne({ _id: id, user: user_id });
         if (!order)
             throw new service_error_1.NotFoundException("Order not found");
+        if (order.payment_method === "wallet") {
+            const user = await user_1.default.findById(user_id);
+            if (!user)
+                throw new service_error_1.NotFoundException("User not found");
+            user.escrow = (0, numeral_1.default)(user.escrow).subtract(order.amount).value();
+            await user.save();
+            await transaction_1.default.updateOne({ _id: order.payment_ref }, { status: "successful" });
+            order.paid = "completed";
+        }
+        else if (order.payment_method === "paypal") {
+            await (0, paypalv2_1.capturePayment)(order.payment_ref);
+        }
         /**
          * during confirmation ensure the user(homeowner) has completed payment
          * create a transaction and with a type commission and status pending
          * add tip if there's any
          *
          */
-        await order.updateOne({ status: "completed" });
+        order.status = "completed";
+        await order.save();
         return { message: "Order completed successfully", data: null };
-    }
-    selectLeader(users) {
-        let highest = -Infinity;
-        let leader = null;
-        users.forEach(user => {
-            if (user.avg_rating > highest) {
-                highest = user.avg_rating;
-                leader = user.user;
-            }
-        });
-        return users.map(user => {
-            var _a, _b, _c, _d;
-            return ({
-                name: ((_a = user.user) === null || _a === void 0 ? void 0 : _a.first_name) + " " + ((_b = user.user) === null || _b === void 0 ? void 0 : _b.last_name),
-                avatar: ((_c = user.user) === null || _c === void 0 ? void 0 : _c.avatar) || null,
-                user: (_d = user.user) === null || _d === void 0 ? void 0 : _d._id,
-                leader: user.user == leader
-            });
-        });
     }
     calculateOrderAmount(num_of_bedrooms, num_cleaners) {
         const baserate = 30;

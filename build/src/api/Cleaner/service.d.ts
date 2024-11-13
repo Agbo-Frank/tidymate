@@ -24,9 +24,24 @@
 /// <reference types="mongoose" />
 /// <reference types="mongoose/types/inferschematype" />
 /// <reference types="mongoose-paginate-v2" />
+import { ICleaner } from "../../model/cleaner";
 import { IUploaDocs, ISetLocation, ICreateRequest } from "./interface";
 declare class Service {
     orders(user: string): Promise<{
+        message: string;
+        data: import("mongoose").PaginateResult<import("mongoose").Document<unknown, {
+            sort: {
+                created_at: number;
+            };
+            populate: {
+                path: string;
+                select: string;
+            };
+        }, import("../../model/order").IOrder> & import("../../model/order").IOrder & {
+            _id: import("mongoose").Types.ObjectId;
+        }>;
+    }>;
+    pendingOrders(): Promise<{
         message: string;
         data: import("mongoose").PaginateResult<import("mongoose").Document<unknown, {
             sort: {
@@ -56,7 +71,11 @@ declare class Service {
             _id: import("mongoose").Types.ObjectId;
         };
     }>;
-    accept(id: string, user: string): Promise<{
+    accept(id: string, user_id: string): Promise<{
+        message: string;
+        data: any;
+    }>;
+    decline(id: string, user: string): Promise<{
         message: string;
         data: any;
     }>;
@@ -67,13 +86,13 @@ declare class Service {
     paymentMethod(): void;
     profile(user: string): Promise<{
         message: string;
-        data: import("mongoose").Document<unknown, {}, import("../../model/cleaner").ICleaner> & import("../../model/cleaner").ICleaner & {
+        data: import("mongoose").Document<unknown, {}, ICleaner> & ICleaner & {
             _id: import("mongoose").Types.ObjectId;
         };
     }>;
     getCleaners(query: any): Promise<{
         message: string;
-        data: (import("mongoose").Document<unknown, {}, import("../../model/cleaner").ICleaner> & import("../../model/cleaner").ICleaner & {
+        data: (import("mongoose").Document<unknown, {}, ICleaner> & ICleaner & {
             _id: import("mongoose").Types.ObjectId;
         })[];
     }>;
@@ -90,6 +109,7 @@ declare class Service {
         data: any;
     }>;
     private filters;
+    private selectLeader;
 }
 declare const _default: Service;
 export default _default;

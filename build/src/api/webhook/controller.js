@@ -9,118 +9,67 @@ const order_1 = __importDefault(require("../../model/order"));
 const helpers_1 = require("../../utility/helpers");
 const numeral_1 = __importDefault(require("numeral"));
 const user_1 = __importDefault(require("../../model/user"));
+const paypalv2_1 = require("../../service/paypalv2");
+const events = [
+    "CHECKOUT.ORDER.APPROVED",
+    "PAYMENT.CAPTURE.COMPLETED",
+    "CHECKOUT.PAYMENT-APPROVAL.REVERSED"
+];
 class Controller {
-    async paypal(req, res, next) {
-        var _a;
+    async paypal(req, res) {
+        var _a, _b, _c, _d, _e, _f;
         try {
-            const { resource } = req.body;
-            const unit = resource.purchase_units.find(u => (0, helpers_1.compareStrings)(u === null || u === void 0 ? void 0 : u.reference_id, "default"));
-            if (unit.custom_id.startsWith("WAL-")) {
-                const tx = await transaction_1.default.findOne({ payment_ref: resource === null || resource === void 0 ? void 0 : resource.id });
+            const { event_type, resource } = req.body;
+            if ((0, helpers_1.isEmpty)(event_type) || !events.includes(event_type))
+                return res.status(200);
+            let custom_id = null;
+            let order_id = null;
+            if ((0, helpers_1.compareStrings)(resource === null || resource === void 0 ? void 0 : resource.status, "APPROVED")) {
+                const unit = resource === null || resource === void 0 ? void 0 : resource.purchase_units.find(u => (0, helpers_1.compareStrings)(u === null || u === void 0 ? void 0 : u.reference_id, "default"));
+                custom_id = unit.custom_id;
+                order_id = resource === null || resource === void 0 ? void 0 : resource.id;
+            }
+            if ((0, helpers_1.compareStrings)(resource === null || resource === void 0 ? void 0 : resource.status, "COMPLETED")) {
+                custom_id = resource === null || resource === void 0 ? void 0 : resource.custom_id;
+                order_id = (_b = (_a = resource === null || resource === void 0 ? void 0 : resource.supplementary_data) === null || _a === void 0 ? void 0 : _a.related_ids) === null || _b === void 0 ? void 0 : _b.order_id;
+            }
+            if (custom_id.startsWith("WAL-")) {
+                const tx = await transaction_1.default.findOne({ payment_ref: order_id });
                 if (!tx || (tx === null || tx === void 0 ? void 0 : tx.status) !== "pending") {
                     throw new service_error_1.BadRequestException("Bad request");
                 }
-                if ((0, helpers_1.compareStrings)(resource === null || resource === void 0 ? void 0 : resource.status, "APPROVED")) {
+                if ((0, helpers_1.compareStrings)(resource === null || resource === void 0 ? void 0 : resource.status, "APPROVED") &&
+                    (0, helpers_1.compareStrings)(resource === null || resource === void 0 ? void 0 : resource.intent, "CAPTURE")) {
+                    await (0, paypalv2_1.capturePayment)(resource === null || resource === void 0 ? void 0 : resource.id);
+                }
+                if ((0, helpers_1.compareStrings)(resource === null || resource === void 0 ? void 0 : resource.status, "COMPLETED")) {
+                    const amount = (_d = (_c = resource === null || resource === void 0 ? void 0 : resource.seller_receivable_breakdown) === null || _c === void 0 ? void 0 : _c.net_amount) === null || _d === void 0 ? void 0 : _d.value;
+                    const fee = (_f = (_e = resource === null || resource === void 0 ? void 0 : resource.seller_receivable_breakdown) === null || _e === void 0 ? void 0 : _e.paypal_fee) === null || _f === void 0 ? void 0 : _f.value;
                     tx.status = "successful";
-                    await user_1.default.updateOne({ _id: tx.user }, { $inc: { balance: (0, numeral_1.default)((_a = unit === null || unit === void 0 ? void 0 : unit.amount) === null || _a === void 0 ? void 0 : _a.value).value() } });
+                    tx.fee = (0, numeral_1.default)(fee).value();
+                    await user_1.default.updateOne({ _id: tx.user }, { $inc: { balance: (0, numeral_1.default)(amount).value() }
+                    });
                     await tx.save();
                 }
             }
-            if (unit.custom_id.startsWith("ORD-")) {
-                const order = await order_1.default.findOne({ payment_ref: resource === null || resource === void 0 ? void 0 : resource.id });
+            if (custom_id.startsWith("ORD-")) {
+                const order = await order_1.default.findOne({ payment_ref: order_id });
                 if (!order)
                     throw new service_error_1.NotFoundException("Order not found");
-                if ((0, helpers_1.compareStrings)(resource === null || resource === void 0 ? void 0 : resource.status, "APPROVED")) {
-                    order.paid = true;
-                    await order.save();
-                }
+                if ((0, helpers_1.compareStrings)(resource === null || resource === void 0 ? void 0 : resource.status, "APPROVED"))
+                    order.paid = "initialized";
+                else if ((0, helpers_1.compareStrings)(resource === null || resource === void 0 ? void 0 : resource.status, "COMPLETED"))
+                    order.paid = "completed";
+                else
+                    order.paid = "pending";
+                await order.save();
             }
             return res.status(200);
         }
         catch (error) {
+            console.log(error);
             return res.status(200);
         }
-        // return console.log(JSON.stringify(req.body, null, 2))
-        // const { status, resources } = req.params
-        // let tx: any = null
-        // let order: any = null
-        // let sub: any = null
-        // let amount = 0
-        // const filter = {
-        //   "metadata": { payment: req.query?.paymentId },
-        //   // payment_method: "paypal"
-        // }
-        // console.log(filter)
-        // if(compareStrings(resources, "wallet")){
-        //   tx = await Transaction.findOne(filter)
-        //   if(!tx) throw new NotFoundException("Transaction not found");
-        //   amount = tx.amount;
-        // }
-        // else if(compareStrings(resources, "order")){
-        //   order = await Order.findOne(filter)
-        //   if(!order) throw new NotFoundException("Order not found");
-        //   amount = order.amount;
-        // }
-        // else if(compareStrings(resources, "subscription")){
-        //   sub = await Subscription.findOne(filter)
-        //   if(!sub) throw new NotFoundException("Subcription not found");
-        //   amount = sub.amount;
-        // }
-        // else {
-        //   throw new NotFoundException("Resource not found/supported")
-        // }
-        // if(compareStrings(status, "failed")){
-        //   //TODO: handled failed payment
-        //   return;
-        // }
-        // if(compareStrings(resources, "subscription")){
-        //   console.log("Query: ",req.query)
-        //   return executeSubscription(req.query?.token, async (err, result) => {
-        //     if(err) throw new ServiceError(err.message, err.httpStatusCode, err.response.details);
-        //     console.log("Result: ", result)
-        //     if(!compareStrings(result.state, "Active") || isEmpty(sub)) {
-        //       throw new ServiceError(
-        //         result?.failure_reason || "Payment not approved", 
-        //         result.httpStatusCode, 
-        //       );
-        //     }
-        //     sub.status = "active"
-        //     await sub.save()
-        //     return responsHandler(res, "Subscripton payment completed", StatusCodes.OK, result)
-        //     //TODO: check for failed subscription
-        //   })
-        // }
-        // return executePayment(
-        //   amount, 
-        //   req.query?.PayerID, 
-        //   req.query.paymentId,
-        //   async (err, result) => {
-        //     if(err) throw new ServiceError(err.message, err.httpStatusCode, err.response.details);
-        //     else {
-        //       JSON.stringify(result, null, 2)
-        //       if(result.state !== "approved") {
-        //         throw new ServiceError(
-        //           result?.failure_reason || "Payment not approved", 
-        //           result.httpStatusCode, 
-        //         );
-        //       }
-        //       if(!isEmpty(tx)){
-        //         tx.status = "successful"
-        //         const user = await User.findById(tx.user)
-        //         if(!user) throw new NotFoundException("User not found")
-        //         user.balance = numeral(user.balance).add(tx.amount).value()
-        //         await user.save()
-        //         await tx.save()
-        //         return responsHandler(res, "Payment completed", StatusCodes.OK, result)
-        //       }
-        //       else if(!isEmpty(order)){
-        //         order.paid = true
-        //         await order.save()
-        //         return responsHandler(res, "Payment completed", StatusCodes.OK, result)
-        //       }
-        //     }
-        //   }
-        // )
     }
 }
 exports.default = new Controller();

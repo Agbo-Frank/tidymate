@@ -3,10 +3,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const googleapis_1 = require("googleapis");
 const cleaner_1 = __importDefault(require("../../model/cleaner"));
 const referral_1 = __importDefault(require("../../model/referral"));
 const user_1 = __importDefault(require("../../model/user"));
 const mail_1 = __importDefault(require("../../service/mail"));
+const config_1 = require("../../utility/config");
 const helpers_1 = require("../../utility/helpers");
 const jwt_1 = __importDefault(require("../../utility/jwt"));
 const service_error_1 = require("../../utility/service-error");
@@ -38,6 +40,40 @@ class Service {
         }
         return { message: "User login successful", data };
     }
+    async loginWithGoogle({ redirect_url }) {
+        const oauth2Client = new googleapis_1.google.auth.OAuth2(config_1.GOOGLE_CLIENT_ID, config_1.GOOGLE_CLIENT_SECRET, redirect_url);
+        const url = oauth2Client.generateAuthUrl({ scope: "https://www.googleapis.com/auth/userinfo.profile" });
+        return { message: "", data: { url } };
+    }
+    async getGoogleProfile({ code }) {
+        const oauth2Client = new googleapis_1.google.auth.OAuth2(config_1.GOOGLE_CLIENT_ID, config_1.GOOGLE_CLIENT_SECRET);
+        const { tokens } = await oauth2Client.getToken(code);
+        oauth2Client.setCredentials(tokens);
+        const oauth2 = googleapis_1.google.oauth2({ auth: oauth2Client, version: 'v2' });
+        const { data } = await oauth2.userinfo.get();
+        let user = await user_1.default.findOne({ email: data.email });
+        if (!user) {
+            user = await user_1.default.create({
+                email: data.email,
+                first_name: data.given_name,
+                last_name: data.given_name,
+                gender: data === null || data === void 0 ? void 0 : data.gender,
+                email_verified: true,
+                referral_code: (0, helpers_1.randAlphaNum)(8),
+                provider: ['google']
+            });
+        }
+        const token = jwt_1.default.create({ roles: user.roles, id: user === null || user === void 0 ? void 0 : user.id });
+        const result = {
+            token,
+            user: {
+                ...user.toJSON(),
+                kyc_required: false
+            },
+            role: (user === null || user === void 0 ? void 0 : user.roles) || "homeowner"
+        };
+        return { message: "User signin successful", data: result };
+    }
     async register(payload) {
         const { email, first_name, last_name, phone_number, referral_code } = payload;
         let user = await user_1.default.findOne({ email });
@@ -48,6 +84,7 @@ class Service {
             email, first_name,
             last_name, phone_number,
             password,
+            provider: ["password"],
             referral_code: (0, helpers_1.randAlphaNum)(8)
         });
         if (!(0, helpers_1.isEmpty)(referral_code)) {
