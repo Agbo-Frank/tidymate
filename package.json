@@ -30,6 +30,8 @@
     "typescript": "~5.4.3"
   },
   "dependencies": {
+    "@socket.io/redis-adapter": "^8.3.0",
+    "@socket.io/sticky": "^1.0.4",
     "axios": "^1.6.8",
     "bcrypt": "^5.1.1",
     "buffer-crc32": "^1.0.0",

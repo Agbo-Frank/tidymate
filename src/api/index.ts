@@ -10,12 +10,12 @@ import misc from "./mics/routes"
 import guard, { guardValid } from "../middleware/guard";
 
 export default function(app: Application){
-  app.use("/", auth)
-  app.use("/", webhook)
-  app.use("/", guardValid, guard, wallet)
+  app.use("/auth", auth)
+  app.use(webhook)
+  app.use(guardValid, guard, misc)
+  app.use("/wallet", guardValid, guard, wallet)
   app.use("/", guardValid, guard, card)
-  app.use("/", guardValid, guard, user)
-  app.use("/", guardValid, guard, order)
-  app.use("/", guardValid, guard, cleaner)
-  app.use("/", guardValid, guard, misc)
+  app.use("/users", guardValid, guard, user)
+  app.use("/orders", guardValid, guard, order)
+  app.use("/cleaners", guardValid, guard, cleaner)
 }
