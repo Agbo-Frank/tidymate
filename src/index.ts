@@ -8,7 +8,7 @@ const logger = new Logger("server")
 
 if(Object.values(config).some(value => isEmpty(value))){
   Object.entries(config).forEach(values => {
-      if(isEmpty(values[1])) console.log(`${values[0]} is undefined`)
+    if(isEmpty(values[1])) console.log(`${values[0]} is undefined`)
   })
   throw new Error("Please enter all config values")
 }
