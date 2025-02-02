@@ -8,7 +8,7 @@ export interface IMessage {
 
 const message = new Schema({
   order: String,
-  from: String,
+  from: { type: String, ref: "User" },
   content: String,
 }, {
   timestamps: {

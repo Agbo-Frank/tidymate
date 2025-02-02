@@ -11,6 +11,7 @@ export interface IUser {
   _id?: string
   first_name: string
   last_name: string
+  full_name?: string
   gender: string
   email: string
   phone_number: string
@@ -22,11 +23,12 @@ export interface IUser {
   currency: string
   roles: string
   email_verified: boolean
+  stripe_customer: string
   referral_code: string
   created_at: string
   socket: string
   cleaner: string | typeof Types.ObjectId
-} 
+}
 
 const user = new Schema<IUser>({
   avatar: {
@@ -57,6 +59,7 @@ const user = new Schema<IUser>({
     type: String,
     trim: true
   },
+  stripe_customer: String,
   password: String,
   roles: String,
   socket: String,
@@ -70,6 +73,10 @@ const user = new Schema<IUser>({
     updatedAt: "updated_at"
   }
 })
+
+user.virtual("full_name").get(function () {
+  return `${this?.first_name || ""} ${this.last_name || ""}`;
+});
 
 user.plugin(mongoosePaginate);
 const User = model<IUser, PaginateModel<IUser>>("User", user)

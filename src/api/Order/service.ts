@@ -3,18 +3,18 @@ import Order from "../../model/order";
 import { ICreateOrder, IProcessPayment, IReOrder, IReview, ITip } from "./interface";
 import { BadRequestException, NotFoundException } from "../../utility/service-error";
 import { compareStrings, geocoder, isEmpty } from "../../utility/helpers";
-import Card from "../../model/cards";
 import numeral from "numeral"
-import { chargeCard } from "../../service/stripe/charge-card";
 import Transaction from "../../model/transaction";
-import Cleaner, { ICleaner } from "../../model/cleaner";
+import Cleaner from "../../model/cleaner";
 import Review from "../../model/review";
-import { capturePayment, createPayment } from "../../service/paypalv2";
-import User, { IUser } from "../../model/user";
+import { capturePayment } from "../../service/paypalv2";
+import User from "../../model/user";
 import History from "../../model/history";
+import paymentService from "../Payment/service"
+import Payment, { EPaymentService } from "../../model/payment";
 
 class Service {
-  async create(payload: ICreateOrder, user: string){
+  async create(payload: ICreateOrder, user: string) {
     const { service, note, num_cleaners = 1, start_date, coordinates, config } = payload
 
     const { amount, duration } = this.calculateOrderAmount(config.bedroom, num_cleaners)
@@ -28,7 +28,7 @@ class Service {
     })
 
     const location = await geocoder(coordinates)
-    if(location){
+    if (location) {
       order.location.address = location.formatted_address
       await History.create({
         address: location.formatted_address,
@@ -41,41 +41,41 @@ class Service {
     return { message: "Order created successfully", data: order }
   }
 
-  async update(payload, user: string){
+  async update(payload, user: string) {
     const { scheduled_at, coordinates, config, _id } = payload
     const update_payload: any = {}
 
     let order = await Order.findOne({ _id, user })
-    if(!order) throw new NotFoundException('Order not found');
+    if (!order) throw new NotFoundException('Order not found');
 
-    if(!isEmpty(config)){
+    if (!isEmpty(config)) {
       const { amount, duration } = this.calculateOrderAmount(config.bedroom, order.num_cleaners)
       update_payload.amount = amount
       update_payload.estimated_duration = duration
       update_payload.config = config
     }
 
-    if(!isEmpty(coordinates)){
+    if (!isEmpty(coordinates)) {
       const location = await geocoder(coordinates)
-      if(location){
+      if (location) {
         update_payload.location.coordinates = coordinates
         update_payload.location.address = location.formatted_address;
       }
     }
 
-    if(scheduled_at){
+    if (scheduled_at) {
       update_payload.scheduled_at = dayjs.unix(scheduled_at).toISOString()
     }
 
     await order.updateOne(update_payload)
-    
+
     order = await Order.findOne({ _id, user })
     return { message: "Order updated successfully", data: order }
   }
 
-  async reorder(payload: IReOrder, user: string){
+  async reorder(payload: IReOrder, user: string) {
     const order = await Order.findById(payload.order).lean()
-    if(!order) throw new NotFoundException("Order not found ");
+    if (!order) throw new NotFoundException("Order not found ");
 
     const newOrder = new Order({
       user, service: order.service || "home",
@@ -95,125 +95,150 @@ class Service {
     }
   }
 
-  async processPayment(payload: IProcessPayment, user_id: string){
+  async processPayment(payload: IProcessPayment, user_id: string) {
     const order = await Order.findById(payload.order)
-    if(!order) throw new NotFoundException("Order not found");
+    if (!order) throw new NotFoundException("Order not found");
 
-    let data = null
+    // let data = null
+    const data = await paymentService.initialize({
+      referrence: order.id,
+      service: EPaymentService.order,
+      method: payload.method,
+      amount: order.amount,
+      narration: "Order payment",
+      intent: "AUTHORIZE",
+      callback_url: payload?.callback_url
+    }, user_id)
 
-    if(compareStrings(payload.method, "wallet")){
-      const user = await User.findById(user_id)
-      if(user.balance < order.amount){
-        throw new BadRequestException("Insufficient balance, please fund your wallet")
-      }
-      user.balance = numeral(user.balance).subtract(order.amount).value()
-      user.escrow = numeral(user.escrow).add(order.amount).value()
+    order.payment = data.data.id
+    await order.save()
 
-      await user.save()
+    // if (compareStrings(payload.method, "wallet")) {
+    //   const user = await User.findById(user_id)
+    //   if (!user) throw new NotFoundException("User not found")
+    //   if (user.balance < order.amount) {
+    //     throw new BadRequestException("Insufficient balance, please fund your wallet")
+    //   }
+    //   user.balance = numeral(user.balance).subtract(order.amount).value()
+    //   user.escrow = numeral(user.escrow).add(order.amount).value()
 
-      const tx = await Transaction.create({
-        user: user_id,
-        status: "pending",
-        narration: "Service charge",
-        amount: order.amount,
-        type: "charge"
-      })
+    //   await user.save()
 
-      order.payment_ref = tx?.id
-      order.payment_method = "wallet"
-      order.paid = "initialized"
-      await order.save()
-    }
+    //   const tx = await Transaction.create({
+    //     user: user_id,
+    //     status: "pending",
+    //     narration: "Service charge",
+    //     amount: order.amount,
+    //     type: "charge"
+    //   })
 
-    if(compareStrings(payload.method, "card")){
-      const card = await Card.findById(payload.card)
-      if(!card) throw new NotFoundException("card not found");
-      
-      const result = await chargeCard({
-        amount: order.amount, 
-        payment_method: card.reference,
-        metadata: { order: order.id }
-      })
+    //   order.payment_ref = tx?.id
+    //   order.payment_method = "wallet"
+    //   order.paid = "initialized"
+    //   await order.save()
+    // }
 
-      order.payment_ref = result?.id
-      order.payment_method = "card"
-      order.paid = "initialized"
-      await order.save()
-      //TODO: handle the webhook
-    }
+    // if (compareStrings(payload.method, "card")) {
+    //   const user = await User.findById(user_id)
+    //   if (!user) throw new NotFoundException("User not found");
 
-    if(compareStrings(payload.method, "paypal")){
-      const result = await createPayment({
-        amount: order.amount, 
-        reference: `ORD-${order.id.slice(-8)}`,
-        description: "Order payment",
-        callback_url: payload?.callback_url
-      })
-      
-      const link = result.links.find(l => compareStrings(l.rel, "payer-action"))
-      data = link ? { link: link?.href } : null;
+    //   const result = await initializePayment({
+    //     name: user?.full_name,
+    //     email: user?.email,
+    //     amount: order.amount,
+    //     customer_id: user?.stripe_customer || null,
+    //     description: "Order payment"
+    //   })
+    //   if (result) {
+    //     data = { card: result };
 
-      order.payment_ref = result?.id
-      order.payment_method = "paypal"
-      order.paid = "initialized"
-      await order.save()
-    }
+    //     if (isEmpty(user.stripe_customer) && !isEmpty(result.customer_id)) {
+    //       await User.updateOne(
+    //         { _id: user_id },
+    //         { stripe_customer: result.customer_id }
+    //       )
+    //     }
 
-    return { message: "Payment initaited successfully", data}
+    //     order.payment_ref = result?.id
+    //     order.payment_method = "card"
+    //     order.paid = "initialized"
+    //     await order.save()
+    //   };
+    //   //TODO: handle the webhook
+    // }
+
+    // if (compareStrings(payload.method, "paypal")) {
+    //   const result = await createPayment({
+    //     amount: order.amount,
+    //     reference: `ORD-${order.id.slice(-8)}`,
+    //     description: "Order payment",
+    //     callback_url: payload?.callback_url
+    //   })
+
+    //   const link = result.links.find(l => compareStrings(l.rel, "payer-action"))
+    //   data = link ? { paypal: { link: link?.href } } : null;
+
+    //   order.payment_ref = result?.id
+    //   order.payment_method = "paypal"
+    //   order.paid = "initialized"
+    //   await order.save()
+    // }
+
+    return { message: "Payment initaited successfully", data: data.data }
   }
 
-  async getOrders(payload, user: string){
+  async getOrders(payload, user: string) {
     const filters: any[] = [{ user }]
-    if("status" in payload) {
+    if ("status" in payload) {
       filters.push({ status: payload.status })
     }
-    
+
     const data = await Order.paginate(
-      { $and: filters }, {sort: {created_at: -1}}
+      { $and: filters }, { sort: { created_at: -1 } }
     )
 
-    return { message: "Orders retreved successfully", data}
+    return { message: "Orders retreved successfully", data }
   }
 
-  async getOrder(id: string, user: string){
-    try{
+  async getOrder(id: string, user: string) {
+    try {
       let data = (await Order.findById(id)).toObject()
 
-      if(!data) throw new NotFoundException("Order not found");
+      if (!data) throw new NotFoundException("Order not found");
 
       const cleaner_ids = data.cleaners.map(c => c.user)
       const cleaners = await Cleaner.find({ user: cleaner_ids })
- 
+
       data.cleaners = data.cleaners.map(orderCleaner => {
         const cleaner = cleaners.find(c => c.user.toString() === orderCleaner.user)
 
-        orderCleaner["avg_rating"] = cleaner.avg_rating 
+        orderCleaner["avg_rating"] = cleaner.avg_rating
         orderCleaner["coordinates"] = cleaner.location.coordinates
         return orderCleaner
       })
 
-      return {message: "Order retreved successfully", data }
-    }catch(err){
+      return { message: "Order retreved successfully", data }
+    } catch (err) {
       console.log(err)
       return null
     }
   }
 
-  async getOrderCleaners(id: string){
+  async getOrderCleaners(id: string) {
     const order = await Order.findById(id)
-    if(!order) throw new NotFoundException("Order not found");
+    if (!order) throw new NotFoundException("Order not found");
 
     const cleaner_ids = order.cleaners.map(c => c.user)
-    const data = await User.find({ _id: cleaner_ids}).populate("cleaner").select("first_name last_name avatar cleaner")
+    const data = await User.find({ _id: cleaner_ids }).populate("cleaner").select("first_name last_name avatar cleaner")
 
     return { message: "Order cleaners retreved successfully", data }
   }
 
-  async cancel(_id: string, user: string){
+  async cancel(_id: string, user: string) {
     const order = await Order.findOne({ _id, user })
-    if(!order) throw new NotFoundException("Order not found");
+    if (!order) throw new NotFoundException("Order not found");
 
-    await order.updateOne({ status: "cancelled"})
+    await order.updateOne({ status: "cancelled" })
 
     return {
       message: "Order concelled successfully",
@@ -221,16 +246,18 @@ class Service {
     }
   }
 
-  async review(payload: IReview, user: string){
+  async review(payload: IReview, user: string) {
     const order = await Order.findById(payload.order).lean()
-    if(!order) throw new NotFoundException("Order not found ");
+    if (!order) throw new NotFoundException("Order not found ");
 
     await Cleaner.updateMany(
       { user: order.cleaners.map(c => c.user) },
-      { $inc: {
-        "rating.num_of_rating": 1,
-        "rating.value_of_rating": payload.rate
-      }}
+      {
+        $inc: {
+          "rating.num_of_rating": 1,
+          "rating.value_of_rating": payload.rate
+        }
+      }
     )
 
     const data = await Review.create(payload)
@@ -238,13 +265,13 @@ class Service {
     return { message: "Thanks for your review", data }
   }
 
-  async tip(payload: ITip, user_id: string){
+  async tip(payload: ITip, user_id: string) {
     const order = await Order.findById(payload.order)
-    if(!order) throw new NotFoundException("Order not found");
+    if (!order) throw new NotFoundException("Order not found");
 
     const user = await User.findById(user_id)
-    if(!user) throw new NotFoundException("Wallet not found");
-    if(user.balance < payload.amount) {
+    if (!user) throw new NotFoundException("Wallet not found");
+    if (user.balance < payload.amount) {
       throw new BadRequestException("Insufficient balance to cover tip");
     }
 
@@ -258,25 +285,26 @@ class Service {
     return { message: "Tip recieved successfully", data: null }
   }
 
-  async complete(id: string, user_id: string){
+  async complete(id: string, user_id: string) {
     const order = await Order.findOne({ _id: id, user: user_id })
-    if(!order) throw new NotFoundException("Order not found");
+    if (!order) throw new NotFoundException("Order not found");
 
-    if(order.payment_method === "wallet"){
+    const payment = await Payment.findById(order.payment)
+    if (payment.method === "wallet") {
       const user = await User.findById(user_id)
-      if(!user) throw new NotFoundException("User not found");
+      if (!user) throw new NotFoundException("User not found");
 
       user.escrow = numeral(user.escrow).subtract(order.amount).value()
       await user.save()
 
       await Transaction.updateOne(
-        { _id: order.payment_ref },
+        { _id: payment.provider_referrence },
         { status: "successful" }
       )
       order.paid = "completed"
     }
-    else if(order.payment_method === "paypal"){
-      await capturePayment(order.payment_ref)
+    else if (payment.method === "paypal") {
+      await capturePayment(payment.provider_referrence)
     }
 
     /**
@@ -290,15 +318,15 @@ class Service {
     await order.save()
     return { message: "Order completed successfully", data: null }
   }
-  
-  private calculateOrderAmount(num_of_bedrooms, num_cleaners){
+
+  private calculateOrderAmount(num_of_bedrooms, num_cleaners) {
     const baserate = 30;
     const ave_hr_per_room = 1;
 
     const duration = num_of_bedrooms * ave_hr_per_room;
 
     return {
-      duration: duration / num_cleaners, 
+      duration: duration / num_cleaners,
       amount: duration * baserate
     }
   }

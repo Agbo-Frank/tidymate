@@ -9,9 +9,10 @@ class Controller {
       const { message, data } = await service.deposit(req.body, req.user)
       responsHandler(res, message, StatusCodes.CREATED, data)
     } catch (error) {
+      console.log(error)
       next(error)
     }
-  } 
+  }
 
   // async withdraw(req: any, res: Response, next: NextFunction) {
   //   try {
@@ -30,7 +31,7 @@ class Controller {
       console.log(error)
       next(error)
     }
-  } 
+  }
 }
 
 export default new Controller()

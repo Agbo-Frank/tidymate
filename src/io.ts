@@ -16,7 +16,6 @@ io.on("connection", socket => {
     if (!token) return next(new Error("invalid token"));
 
     const decoded = jwt.verify(token);
-    console.log(decoded)
     socket.user = decoded?.id;
     next();
   });

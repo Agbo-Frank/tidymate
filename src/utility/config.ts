@@ -8,6 +8,7 @@ export const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY
 export const MONGODB_URL = process.env.MONGODB_URL;
 
 export const STRIPE_APIKEY = process.env.STRIPE_APIKEY
+export const STRIPE_PUBLICKEY = process.env.STRIPE_PUBLICKEY
 
 export const MAIL_HOST = process.env.MAIL_HOST;
 export const MAIL_PORT = process.env.MAIL_PORT;

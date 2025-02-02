@@ -32,7 +32,7 @@ export async function create(payload: ICreateMessage, callback: Callback){
       data: message
     })
 
-    return this.broadcast.emit("message:created", message);
+    return this.broadcast.to(value.order).emit("message:created", message);
   } catch (error) {
     return callback({
       status: "failed",
@@ -50,8 +50,8 @@ export async function list(payload: { order: string }, callback: Callback){
       data: null
     })
   }
-
-  const messages = await Message.find({ order: payload.order });
+  this.join(payload.order)
+  const messages = await Message.find({ order: payload.order }).populate("from", "first_name last_name avatar");
 
   return callback({
     status: "success",

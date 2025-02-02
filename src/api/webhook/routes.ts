@@ -5,5 +5,6 @@ const router = Router()
 
 router.get("/callback/paypal/:resources/:status", cltr.paypal)
 router.post("/webhook/paypal", cltr.paypal)
+router.post("/webhook/stripe", cltr.paypal)
 
 export default router

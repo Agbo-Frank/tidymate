@@ -30,10 +30,9 @@ export interface IOrder {
   tip: number
   currency: string
   paid: string // pending initialized completed declined
-  payment_ref: string
   status: string // pending cancelled ongoing ended completed
   cleaners: IOrderCleaner[]
-  payment_method: string,
+  payment: string
   metadata: any
   socket: string
   location: {
@@ -73,30 +72,32 @@ const order = new Schema<IOrder>({
   num_cleaners: { type: Number, default: 1 },
   estimated_duration: Number,
   actual_duration: Number,
-  images: [ String ],
+  images: [String],
   scheduled_at: Date,
   started_at: Date,
   ended_at: Date,
   amount: { type: Number },
   tip: { type: Number, default: 0 },
   currency: String,
-  paid: { 
-    type: String, 
+  paid: {
+    type: String,
     default: "pending",
     enum: ["pending", "initialized", "completed"]
   },
-  payment_ref: String,
+  payment: {
+    type: String,
+    ref: "payment"
+  },
   status: {
     type: String,
     default: "pending"
   },
-  cleaners: [ orderCleaner ],
-  payment_method: String,
+  cleaners: [orderCleaner],
   socket: String,
   location: {
     address: String,
-    type: { type: String, default: "Point"},
-    coordinates: [ Number ]
+    type: { type: String, default: "Point" },
+    coordinates: [Number]
   },
   metadata: Schema.Types.Mixed
 }, {
