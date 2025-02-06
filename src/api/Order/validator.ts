@@ -16,7 +16,7 @@ export default {
     body("order").notEmpty().withMessage("Order id is required").isMongoId().withMessage("Invalid order id"),
     body("method").notEmpty().withMessage("Payment method is required").isIn(["wallet", "card", "paypal"]).withMessage("Invalid payment method"),
     body("callback_url").if(body("method").equals("paypal")).notEmpty().withMessage("Callback url is required"),//.isURL().withMessage("Must be a valid URL"),
-    body("card").if(body("method").equals("card")).notEmpty().withMessage("Card is required").isMongoId().withMessage("Invalid card id") 
+    // body("card").if(body("method").equals("card")).notEmpty().withMessage("Card is required").isMongoId().withMessage("Invalid card id") 
   ],
   tip: [
     body("order").notEmpty().withMessage("Order id is required").isMongoId().withMessage("Invalid order id"),
@@ -28,7 +28,7 @@ export default {
   ],
   review: [
     body("order").notEmpty().withMessage("Order id is required").isMongoId().withMessage("Invalid order id"),
-    body("rate").notEmpty().withMessage("Rate is required").isInt({min: 0, max: 5}).withMessage("The rating must be between the range of 1 and 5"),
+    body("rate").notEmpty().withMessage("Rate is required").isInt({ min: 0, max: 5 }).withMessage("The rating must be between the range of 1 and 5"),
     body("comment").optional()
   ]
 }

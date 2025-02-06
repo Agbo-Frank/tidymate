@@ -8,7 +8,7 @@ export interface IInitializePayment {
   narration: string
   referrence: string
   callback_url: string
-  intent: "CAPTURE" | "AUTHORIZE"
+  capture?: boolean
 }
 
 export interface IInitializePaymentResult {

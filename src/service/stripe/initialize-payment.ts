@@ -7,7 +7,7 @@ import { createEphemeralKey } from "./create-ephemeral";
 import { createPaymentIntent } from "./create-paymentintent";
 import { IInitializePayment, IInitializePaymentResult } from "./interface";
 
-export async function initializePayment(payload: IInitializePayment): Promise<IInitializePaymentResult> {
+export async function initializeCardPayment(payload: IInitializePayment): Promise<IInitializePaymentResult> {
   try {
     const { name, email, amount, description } = payload
     let { customer_id } = payload

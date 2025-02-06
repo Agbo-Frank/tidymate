@@ -1,8 +1,8 @@
 import Payment from "../../model/payment";
 import Transaction from "../../model/transaction";
 import User from "../../model/user";
-import { createPayment } from "../../service/paypalv2";
-import { initializePayment } from "../../service/stripe";
+import { capturePayment, createPayment } from "../../service/paypalv2";
+import { captureCardPayment, initializeCardPayment } from "../../service/stripe";
 import { compareStrings, isEmpty } from "../../utility/helpers";
 import { BadRequestException, NotFoundException } from "../../utility/service-error";
 import { IInitializePayment, IInitializePaymentResult } from "./interface";
@@ -10,7 +10,7 @@ import numeral from "numeral"
 
 class Service {
   async initialize(payload: IInitializePayment, user_id: string) {
-    const { amount, narration, intent, referrence, callback_url, service } = payload
+    const { amount, narration, capture = true, referrence, callback_url, service } = payload
     const payment = new Payment({
       amount,
       service,
@@ -55,10 +55,11 @@ class Service {
       const user = await User.findById(user_id)
       if (!user) throw new NotFoundException("User not found");
 
-      const result = await initializePayment({
+      const result = await initializeCardPayment({
         name: user?.full_name,
         email: user?.email,
         amount: payment.amount,
+        capture_method: capture ? "automatic_async" : "manual",
         customer_id: user?.stripe_customer || null,
         description: narration
       })
@@ -84,9 +85,9 @@ class Service {
     else if (compareStrings(payload.method, "paypal")) {
       const result = await createPayment({
         amount: payment.amount,
-        reference: payment.id, // `ORD-${order.id.slice(-8)}`,
+        reference: payment.id,
         description: narration,
-        intent,
+        intent: capture ? "CAPTURE" : "AUTHORIZE",
         callback_url
       })
 
@@ -103,6 +104,48 @@ class Service {
     }
 
     return { message: "Payment initaited successfully", data }
+  }
+
+  async capture(id: string) {
+    let status = "failed"
+    try {
+      const payment = await Payment.findById(id)
+      if (!payment) {
+        throw new NotFoundException("Payment not found")
+      }
+      if (payment.status !== "pending") {
+        throw new NotFoundException({
+          "successful": "Payment is successful",
+          "failed": "Payment has failed"
+        }[payment.status])
+      }
+
+      if (payment.method === "wallet") {
+        const user = await User.findById(payment.user)
+        if (!user) throw new NotFoundException("User not found");
+
+        user.escrow = numeral(user.escrow).subtract(payment.amount).value()
+        await user.save()
+
+        await Transaction.updateOne(
+          { _id: payment.provider_referrence },
+          { status: "successful" }
+        )
+        status = "successful"
+      }
+      if (payment.method === "paypal") {
+        const result = await capturePayment(payment.provider_referrence)
+        console.log(result, payment.method)
+      }
+      if (payment.method === "card") {
+        const result = await captureCardPayment(payment.provider_referrence)
+        console.log(result, payment.method)
+      }
+
+      return { message: "Payment captured successfully", data: { status } }
+    } catch (error) {
+      return { message: error?.message, data: { status } }
+    }
   }
 }
 

@@ -82,7 +82,7 @@ const order = new Schema<IOrder>({
   paid: {
     type: String,
     default: "pending",
-    enum: ["pending", "initialized", "completed"]
+    enum: ["pending", "initialized", "completed", "declined"]
   },
   payment: {
     type: String,

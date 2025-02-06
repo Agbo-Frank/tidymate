@@ -23,7 +23,6 @@ class Service {
       method,
       amount,
       narration: tx.narration,
-      intent: "CAPTURE",
       callback_url: payload?.callback_url
     }, user_id)
 

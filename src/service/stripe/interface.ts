@@ -4,6 +4,7 @@ export interface IInitializePayment {
   customer_id: string | null
   amount: number
   description: string
+  capture_method: "automatic_async" | "automatic" | "manual"
 }
 
 export interface IInitializePaymentResult {

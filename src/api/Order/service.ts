@@ -106,7 +106,7 @@ class Service {
       method: payload.method,
       amount: order.amount,
       narration: "Order payment",
-      intent: "AUTHORIZE",
+      capture: false,
       callback_url: payload?.callback_url
     }, user_id)
 
@@ -289,33 +289,18 @@ class Service {
     const order = await Order.findOne({ _id: id, user: user_id })
     if (!order) throw new NotFoundException("Order not found");
 
-    const payment = await Payment.findById(order.payment)
-    if (payment.method === "wallet") {
-      const user = await User.findById(user_id)
-      if (!user) throw new NotFoundException("User not found");
-
-      user.escrow = numeral(user.escrow).subtract(order.amount).value()
-      await user.save()
-
-      await Transaction.updateOne(
-        { _id: payment.provider_referrence },
-        { status: "successful" }
-      )
+    const { data } = await paymentService.capture(order.payment)
+    if (data.status === "successful") {
       order.paid = "completed"
+      order.status = "completed"
+      await order.save()
     }
-    else if (payment.method === "paypal") {
-      await capturePayment(payment.provider_referrence)
-    }
-
     /**
      * during confirmation ensure the user(homeowner) has completed payment
      * create a transaction and with a type commission and status pending
      * add tip if there's any
      * 
      */
-
-    order.status = "completed"
-    await order.save()
     return { message: "Order completed successfully", data: null }
   }
 
